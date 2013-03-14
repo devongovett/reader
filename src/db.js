@@ -1,63 +1,21 @@
 var mongoose = require('mongoose');
-var ObjectId = mongoose.Schema.Types.ObjectId;
 
-function Ref(type) {
-    return { type: ObjectId, ref: type };
-}
+// add a helper function used in the models
+mongoose.ref = function(type) {
+    return {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: type
+    };
+};
 
-// shared models for all users
-var Post = mongoose.Schema({
-    title: String,
-    description: String,
-    url: String,
-    date: Date,
-    author: String,
-    body: String
-});
+// export the modules
+exports.Feed = require('./models/feed');
+exports.Post = require('./models/post');
+exports.User = require('./models/user');
+exports.Tag = require('./models/tag');
+exports.Subscription = require('./models/subscription');
 
-var Feed = mongoose.Schema({
-    title: String,
-    feedURL: { type: String, unique: true },
-    siteURL: String,
-    posts: [Post],
-    numSubscribers: Number,
-    successfulCrawlTime: Date,
-    failedCrawlTime: Date,
-    lastFailureWasParseFailure: Boolean
-});
-
-// user specific models
-var Tag = mongoose.Schema({
-    name: String,
-    sortID: Number
-});
-
-var Item = mongoose.Schema({
-    post: Ref('Post'),
-    tags: [Ref('Tag')]
-});
-
-var Subscription = mongoose.Schema({
-    title: String,      // the user is allowed to rename subscriptions
-    feed: Ref('Feed'),
-    items: [Item],
-    tags: [Ref('Tag')]
-});
-
-var User = mongoose.Schema({
-    username: String,
-    password: String,
-    subscriptions: [Subscription],
-    tags: [Tag]
-});
-
-exports.Feed = mongoose.model('Feed', Feed);
-exports.Post = mongoose.model('Post', Post);
-exports.Tag = mongoose.model('Tag', Tag);
-exports.Item = mongoose.model('Item', Item);
-exports.Subscription = mongoose.model('Subscription', Subscription);
-exports.User = mongoose.model('User', User);
-
+// connect to the database
 mongoose.connect('mongodb://localhost/reader');
 var db = mongoose.connection;
 
