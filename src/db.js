@@ -19,8 +19,8 @@ var Feed = mongoose.Schema({
     title: String,
     feedURL: { type: String, unique: true },
     siteURL: String,
-    posts: [Ref('Post')],
-    subscribers: Number,
+    posts: [Post],
+    numSubscribers: Number,
     successfulCrawlTime: Date,
     failedCrawlTime: Date,
     lastFailureWasParseFailure: Boolean
@@ -38,7 +38,9 @@ var Item = mongoose.Schema({
 });
 
 var Subscription = mongoose.Schema({
+    title: String,      // the user is allowed to rename subscriptions
     feed: Ref('Feed'),
+    items: [Item],
     tags: [Ref('Tag')]
 });
 

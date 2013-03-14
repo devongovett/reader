@@ -7,10 +7,12 @@ replacement, just the backend API.
 
 ## Tech
 
-I plan to build this using Node.js and a database backend.  I was considering using Mongo just 
-because I'd like to try something new, but I'm happy to use standard MySQL as well.
+* [Node.js](http://nodejs.org/)
+* [MongoDB](http://www.mongodb.org) (so I can try something new!)
+* [Express](http://expressjs.org/)
+* [Mongoose](http://mongoosejs.com/)
 
-Some interesting modules I found:
+Some interesting modules to investigate:
 
 * https://github.com/danmactough/node-feedparser
 * https://github.com/dylang/node-rss
@@ -22,3 +24,7 @@ Some unofficial API documentation on the old Google Reader API that we'd be copy
 ## Want to help?
 
 Get in touch on [Twitter](http://twitter.com/devongovett) and let me know! :)
+Feel free to fork this repository and send pull requests implementing features.  Once you've
+sent a couple good ones, I'll add you as a contributor to the project to commit directly.
+
+We should probably have an IRC room on Freenode.  I'll set that up later.
