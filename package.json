@@ -1,0 +1,18 @@
+{
+  "name": "greader",
+  "description": "An API Compatible Replacement for Google Reader",
+  "version": "0.0.1",
+  "author": {
+      "name": "Devon Govett",
+      "email": "devongovett@gmail.com",
+      "url": "http://badassjs.com/"
+  },
+  "repository": {
+      "type": "git",
+      "url": "https://github.com/devongovett/reader.git"
+  },
+  "bugs": "http://github.com/devongovett/reader/issues",
+  "dependencies": {
+      "mongoose": ">=3.5"
+  }
+}
