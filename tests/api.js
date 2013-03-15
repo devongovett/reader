@@ -69,7 +69,7 @@ QUnit.asyncTest('valid ClientLogin', function() {
 
 QUnit.asyncTest('token auth required', function() {
     request.get({ url: API + '/token', jar: false }, function(err, res, body) {
-        assert.equal(res.statusCode, 403);
+        assert.equal(res.statusCode, 401);
         assert.equal(body, 'Error=AuthRequired');
         
         QUnit.start();

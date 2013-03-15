@@ -101,7 +101,7 @@ app.post('/accounts/register', function(req, res) {
 
 app.get(API_ROOT + '/token', function(req, res) {
     if (!req.session.authorized)
-        return res.status(403).send('Error=AuthRequired');
+        return res.status(401).send('Error=AuthRequired');
     
     crypto.randomBytes(24, function(err, buf) {
         if (err)
