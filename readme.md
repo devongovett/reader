@@ -22,6 +22,7 @@ Some unofficial API documentation on the old Google Reader API that we'd be copy
 * http://undoc.in
 * http://ranchero.com/downloads/GoogleReaderAPI-2009.pdf
 * http://code.google.com/p/pyrfeed/wiki/GoogleReaderAPI
+* https://developers.google.com/accounts/docs/AuthForInstalledApps
 
 ## Want to help?
 
