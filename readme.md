@@ -23,8 +23,12 @@ Some unofficial API documentation on the old Google Reader API that we'd be copy
 
 ## Want to help?
 
-Get in touch on [Twitter](http://twitter.com/devongovett) and let me know! :)
-Feel free to fork this repository and send pull requests implementing features.  Once you've
-sent a couple good ones, I'll add you as a contributor to the project to commit directly.
+Get in touch on [Twitter](http://twitter.com/devongovett) or IRC (#reader on Freenode) 
+and let me know! :) Feel free to fork this repository and send pull requests implementing features.  Once you've sent a couple good ones, I'll add you as a contributor to the project to commit directly.
 
-We should probably have an IRC room on Freenode.  I'll set that up later.
+Things to work on:
+
+* Feed fetching and storing
+* API endpoints
+* Testing
+* etc. We are young!
