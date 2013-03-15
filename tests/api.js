@@ -2,10 +2,39 @@ var QUnit = require('qunit-cli'),
     assert = QUnit.assert,
     request = require('request');
     
+var SERVER = 'http://localhost:3000'
+
 QUnit.module('Auth');
 
+QUnit.asyncTest('register account', function() {
+    request.post(SERVER + '/accounts/register', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.equal(body, 'OK');
+        
+        QUnit.start();
+    }).form({ Email: 'test@example.com', Passwd: 'test' });
+});
+
+QUnit.asyncTest('duplicate registration', function() {
+    request.post(SERVER + '/accounts/register', function(err, res, body) {
+        assert.equal(res.statusCode, 400);
+        assert.equal(body, 'Error=DuplicateUser');
+        
+        QUnit.start();
+    }).form({ Email: 'test@example.com', Passwd: 'test' });
+});
+
+QUnit.asyncTest('invalid registration', function() {
+    request.post(SERVER + '/accounts/register', function(err, res, body) {
+        assert.equal(res.statusCode, 400);
+        assert.equal(body, 'Error=BadRequest');
+        
+        QUnit.start();
+    }).form({ Passwd: 'test' });
+});
+
 QUnit.asyncTest('valid ClientLogin', function() {
-    request.post('http://localhost:3000/accounts/ClientLogin', function(err, res, body) {
+    request.post(SERVER + '/accounts/ClientLogin', function(err, res, body) {
         assert.equal(res.statusCode, 200);
         assert.ok(/SID=.+\n/.test(body));
         assert.ok(/LSID=.+\n/.test(body));
@@ -16,7 +45,7 @@ QUnit.asyncTest('valid ClientLogin', function() {
 });
 
 QUnit.asyncTest('ClientLogin invalid username', function() {
-    request.post('http://localhost:3000/accounts/ClientLogin', function(err, res, body) {
+    request.post(SERVER + '/accounts/ClientLogin', function(err, res, body) {
         assert.equal(res.statusCode, 403);
         assert.equal(body, 'Error=BadAuthentication');
         
@@ -25,7 +54,7 @@ QUnit.asyncTest('ClientLogin invalid username', function() {
 });
 
 QUnit.asyncTest('ClientLogin invalid password', function() {
-    request.post('http://localhost:3000/accounts/ClientLogin', function(err, res, body) {
+    request.post(SERVER + '/accounts/ClientLogin', function(err, res, body) {
         assert.equal(res.statusCode, 403);
         assert.equal(body, 'Error=BadAuthentication');
         

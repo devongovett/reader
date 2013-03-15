@@ -67,16 +67,23 @@ app.post('/accounts/ClientLogin', function(req, res) {
 // our own registration API (temporary?)
 app.post('/accounts/register', function(req, res) {
     var user = new db.User({
-        username: req.body.username, // todo: validate email address
-        password: req.body.password
+        username: req.body.Email, // TODO: validate email address
+        password: req.body.Passwd
     });
     
     user.save(function(err) {
-        if (err)
-            res.status(500).send('Error');
-        else
+        if (err && err.name == 'MongoError') {
+            if (err.code == 11000)
+                res.status(400).send('Error=DuplicateUser');
+            else
+                res.status(500).send('Error=Unknown');
+                
+        } else if (err && err.name == 'ValidationError') {
+            res.status(400).send('Error=BadRequest');
+            
+        } else {
             res.send('OK');
-        
+        }        
     });
 });
 
