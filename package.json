@@ -15,6 +15,8 @@
   "dependencies": {
       "mongoose": ">=3.5",
       "express": "3.x",
-      "bcrypt": ">=0.7.5"
+      "bcrypt": ">=0.7.5",
+      "qunit-cli": "*",
+      "request": "2.x"
   }
 }
