@@ -3,6 +3,7 @@
  */
 
 var API_ROOT = '/reader/api/0/';
+var SECRET = 'gobbledygook';
 var PORT = 3000;
 
 /*
@@ -35,15 +36,47 @@ var express = require('express');
 var app = express();
 
 app.use(express.bodyParser());
+app.use(express.cookieParser(SECRET));
+app.use(express.session({ key: 'SID' }));
 
 // simple ClientLogin API for now, though we should probably support OAuth too
+// see https://developers.google.com/accounts/docs/AuthForInstalledApps
 app.post('/accounts/ClientLogin', function(req, res) {
-    
+    db.User.findOne({ username: req.body.Email }, function(err, user) {
+        if (err || !user)
+            return res.status(403).send('Error=BadAuthentication');
+            
+        user.checkPassword(req.body.Passwd, function(err, matched) {
+            if (err || !matched)
+                return res.status(403).send('Error=BadAuthentication');
+            
+            req.session.authorized = true;
+            req.session.user = user;
+            
+            // clients *should* only care about SID, but we'll include all
+            // of Google's fields just in case
+            res.write('SID=' + req.sessionID + '\n');
+            res.write('LSID=' + req.sessionID + '\n');
+            res.write('Auth=' + req.sessionID + '\n');
+            res.end();
+        })
+    });
 });
 
-// our own registration API
+// our own registration API (temporary?)
 app.post('/accounts/register', function(req, res) {
+    var user = new db.User({
+        username: req.body.username, // todo: validate email address
+        password: req.body.password
+    });
     
+    user.save(function(err) {
+        if (err)
+            res.status(500).send('Error');
+        else
+            res.send('OK');
+        
+    });
 });
 
 app.get(API_ROOT + '/stream/contents/user/:userID/*', function(req, res) {
@@ -79,7 +112,7 @@ app.post(API_ROOT + '/subscription/edit', function(req, res) {
         user.subscriptions.findOne({ feed: feed._id }, function(err, subscription) {
             if (!subscription) {
                 subscription = new db.Subscription({
-                    title: req.post.t or feed.title,
+                    title: req.post.t || feed.title,
                     feed: feed._id,
                     items: []
                 });
