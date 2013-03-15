@@ -7,6 +7,7 @@ var SALT_WORK_FACTOR = 10;
 var User = mongoose.Schema({
     username: { type: String, required: true, index: { unique: true } },
     password: { type: String, required: true },
+    signupTime: { type: Date, default: Date.now },
     subscriptions: [Subscription]
 });
 

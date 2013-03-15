@@ -40,16 +40,10 @@ app.use(express.bodyParser());
 app.use(express.cookieParser(SECRET));
 app.use(express.session({ key: 'SID' }));
 
-// default content type
-app.use(function(req, res, next) {
-    res.type('text');
-    // TODO: add other headers that Google Reader's API adds
-    next();
-});
-
 // simple ClientLogin API for now, though we should probably support OAuth too
 // see https://developers.google.com/accounts/docs/AuthForInstalledApps
 app.post('/accounts/ClientLogin', function(req, res) {
+    res.type('text');
     req.session.authorized = false;
     req.session.user = null;
     req.session.token = null;
@@ -78,6 +72,8 @@ app.post('/accounts/ClientLogin', function(req, res) {
 
 // our own registration API (temporary?)
 app.post('/accounts/register', function(req, res) {
+    res.type('text');
+    
     var user = new db.User({
         username: req.body.Email, // TODO: validate email address
         password: req.body.Passwd
@@ -100,6 +96,8 @@ app.post('/accounts/register', function(req, res) {
 });
 
 app.get(API_ROOT + '/token', function(req, res) {
+    res.type('text');
+    
     if (!req.session.authorized)
         return res.status(401).send('Error=AuthRequired');
     
@@ -109,6 +107,23 @@ app.get(API_ROOT + '/token', function(req, res) {
             
         req.session.token = buf.toString('hex').slice(0, 24);
         res.send(req.session.token);
+    });
+});
+
+app.get(API_ROOT + '/user-info', function(req, res) {
+    if (!req.session.authorized)
+        return res.status(401).json({ error: 'AuthRequired' });
+        
+    var user = req.session.user;
+    res.json({
+        userId: user._id,
+        userName: user.username.split('@')[0],
+        userProfileId: user._id, // not sure how this is different from userId
+        userEmail: user.username,
+        isBloggerUser: false,
+        signupTimeSec: Math.round(new Date(user.signupTime) / 1000),
+        // publicUserName?
+        isMultiLoginEnabled: false
     });
 });
 

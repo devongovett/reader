@@ -84,3 +84,21 @@ QUnit.asyncTest('token success', function() {
         QUnit.start();
     });
 });
+
+QUnit.asyncTest('user-info', function() {
+    request(API + '/user-info', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.ok(/json/.test(res.headers['content-type']));
+        
+        body = JSON.parse(body);
+        assert.equal(typeof body.userId, 'string');
+        assert.equal(body.userName, 'test');
+        assert.equal(body.userProfileId, body.userId);
+        assert.equal(body.userEmail, 'test@example.com');
+        assert.equal(body.isBloggerUser, false);
+        assert.equal(typeof body.signupTimeSec, 'number');
+        assert.equal(body.isMultiLoginEnabled, false);
+        
+        QUnit.start();
+    });
+});
