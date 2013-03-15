@@ -1,6 +1,7 @@
 var QUnit = require('qunit-cli'),
     assert = QUnit.assert,
-    request = require('request');
+    request = require('request'),
+    xml = require('libxmljs');
     
 var SERVER = 'http://localhost:3000';
 var API = SERVER + '/reader/api/0';
@@ -99,6 +100,35 @@ QUnit.asyncTest('user-info', function() {
         assert.equal(typeof body.signupTimeSec, 'number');
         assert.equal(body.isMultiLoginEnabled, false);
         
+        QUnit.start();
+    });
+});
+
+QUnit.asyncTest('user-info xml', function() {
+    request(API + '/user-info?output=xml', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.ok(/xml/.test(res.headers['content-type']));
+        
+        var doc = xml.parseXml(body);
+        assert.equal(doc.root().name(), 'object');
+        
+        var userId = doc.get('./string[@name="userId"]').text();
+        assert.equal(typeof userId, 'string');
+        assert.equal(doc.get('./string[@name="userName"]').text(), 'test');
+        assert.equal(doc.get('./string[@name="userProfileId"]').text(), userId);
+        assert.equal(doc.get('./string[@name="userEmail"]').text(), 'test@example.com');
+        assert.equal(doc.get('./boolean[@name="isBloggerUser"]').text(), 'false');
+        assert.ok(/^\d+$/.test(doc.get('./number[@name="signupTimeSec"]').text()));
+        assert.equal(doc.get('./boolean[@name="isMultiLoginEnabled"]').text(), 'false');
+        
+        QUnit.start();
+    });
+});
+
+QUnit.asyncTest('user-info invalid output', function() {
+    request(API + '/user-info?output=invalid', function(err, res, body) {
+        assert.equal(res.statusCode, 400);
+        assert.equal(body, 'Invalid output format');
         QUnit.start();
     });
 });

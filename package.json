@@ -17,6 +17,7 @@
       "express": "3.x",
       "bcrypt": ">=0.7.5",
       "qunit-cli": "*",
-      "request": "2.x"
+      "request": "2.x",
+      "libxmljs": "0.7.x"
   }
 }

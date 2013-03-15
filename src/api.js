@@ -33,7 +33,8 @@ var PORT = 3000;
 
 var express = require('express'),
     crypto = require('crypto'),
-    db = require('./db');
+    db = require('./db'),
+    utils = require('./utils');
     
 var app = express();
 app.use(express.bodyParser());
@@ -115,7 +116,7 @@ app.get(API_ROOT + '/user-info', function(req, res) {
         return res.status(401).json({ error: 'AuthRequired' });
         
     var user = req.session.user;
-    res.json({
+    utils.respond(res, {
         userId: user._id,
         userName: user.username.split('@')[0],
         userProfileId: user._id, // not sure how this is different from userId
@@ -128,6 +129,9 @@ app.get(API_ROOT + '/user-info', function(req, res) {
 });
 
 app.post(API_ROOT + '/subscription/edit', function(req, res) {
+    if (!req.session.authorized)
+        return res.status(401).json({ error: 'AuthRequired' });
+    
     db.Feed.findOne({ feedURL: req.post.s }, function(err, feed) {
         if (!feed) {
             // fetch
