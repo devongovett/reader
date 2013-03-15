@@ -35,3 +35,10 @@ Things to work on:
 * API endpoints
 * Testing
 * etc. We are young!
+
+## Installation
+
+1. [Install MongoDB](http://docs.mongodb.org/manual/installation/) if you haven't already.
+2. [Install Node.js](http://nodejs.org/) if you haven't already.
+3. Clone this repo using Git
+4. Run `npm install` to install the dependencies

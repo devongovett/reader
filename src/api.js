@@ -52,6 +52,7 @@ app.post('/accounts/ClientLogin', function(req, res) {
             
             req.session.authorized = true;
             req.session.user = user;
+            req.session.token = null;
             
             // clients *should* only care about SID, but we'll include all
             // of Google's fields just in case
