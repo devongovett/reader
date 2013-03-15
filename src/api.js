@@ -2,7 +2,7 @@
  * This is the actual API endpoint that clients connect to
  */
 
-var API_ROOT = '/reader/api/0/';
+var API_ROOT = '/reader/api/0';
 var SECRET = 'gobbledygook';
 var PORT = 3000;
 
@@ -31,17 +31,29 @@ var PORT = 3000;
     /disable-tag
 */
 
-var db = require('./db');
-var express = require('express');
+var express = require('express'),
+    crypto = require('crypto'),
+    db = require('./db');
+    
 var app = express();
-
 app.use(express.bodyParser());
 app.use(express.cookieParser(SECRET));
 app.use(express.session({ key: 'SID' }));
 
+// default content type
+app.use(function(req, res, next) {
+    res.type('text');
+    // TODO: add other headers that Google Reader's API adds
+    next();
+});
+
 // simple ClientLogin API for now, though we should probably support OAuth too
 // see https://developers.google.com/accounts/docs/AuthForInstalledApps
 app.post('/accounts/ClientLogin', function(req, res) {
+    req.session.authorized = false;
+    req.session.user = null;
+    req.session.token = null;
+    
     db.User.findOne({ username: req.body.Email }, function(err, user) {
         if (err || !user)
             return res.status(403).send('Error=BadAuthentication');
@@ -49,7 +61,7 @@ app.post('/accounts/ClientLogin', function(req, res) {
         user.checkPassword(req.body.Passwd, function(err, matched) {
             if (err || !matched)
                 return res.status(403).send('Error=BadAuthentication');
-            
+                
             req.session.authorized = true;
             req.session.user = user;
             req.session.token = null;
@@ -87,6 +99,37 @@ app.post('/accounts/register', function(req, res) {
     });
 });
 
+app.get(API_ROOT + '/token', function(req, res) {
+    if (!req.session.authorized)
+        return res.status(403).send('Error=AuthRequired');
+    
+    crypto.randomBytes(24, function(err, buf) {
+        if (err)
+            return res.status(500).send('Error=Unknown');
+            
+        req.session.token = buf.toString('hex').slice(0, 24);
+        res.send(req.session.token);
+    });
+});
+
+app.post(API_ROOT + '/subscription/edit', function(req, res) {
+    db.Feed.findOne({ feedURL: req.post.s }, function(err, feed) {
+        if (!feed) {
+            // fetch
+        }
+        
+        user.subscriptions.findOne({ feed: feed._id }, function(err, subscription) {
+            if (!subscription) {
+                subscription = new db.Subscription({
+                    title: req.post.t || feed.title,
+                    feed: feed._id,
+                    items: []
+                });
+            }
+        });
+    });
+});
+
 app.get(API_ROOT + '/stream/contents/user/:userID/*', function(req, res) {
     res.json({ userID: req.params.userID, tag: req.params[0], query: req.query });
 });
@@ -109,24 +152,6 @@ app.get(API_ROOT + '/stream/items/count', function(req, res) {
 
 app.get(API_ROOT + '/stream/items/contents', function(req, res) {
     
-});
-
-app.post(API_ROOT + '/subscription/edit', function(req, res) {
-    db.Feed.findOne({ feedURL: req.post.s }, function(err, feed) {
-        if (!feed) {
-            // fetch
-        }
-        
-        user.subscriptions.findOne({ feed: feed._id }, function(err, subscription) {
-            if (!subscription) {
-                subscription = new db.Subscription({
-                    title: req.post.t || feed.title,
-                    feed: feed._id,
-                    items: []
-                });
-            }
-        });
-    });
 });
 
 app.listen(PORT);

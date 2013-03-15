@@ -2,7 +2,9 @@ var QUnit = require('qunit-cli'),
     assert = QUnit.assert,
     request = require('request');
     
-var SERVER = 'http://localhost:3000'
+var SERVER = 'http://localhost:3000';
+var API = SERVER + '/reader/api/0';
+var SID;
 
 QUnit.module('Auth');
 
@@ -33,17 +35,6 @@ QUnit.asyncTest('invalid registration', function() {
     }).form({ Passwd: 'test' });
 });
 
-QUnit.asyncTest('valid ClientLogin', function() {
-    request.post(SERVER + '/accounts/ClientLogin', function(err, res, body) {
-        assert.equal(res.statusCode, 200);
-        assert.ok(/SID=.+\n/.test(body));
-        assert.ok(/LSID=.+\n/.test(body));
-        assert.ok(/Auth=.+\n/.test(body));
-        
-        QUnit.start();
-    }).form({ Email: 'test@example.com', Passwd: 'test' });
-});
-
 QUnit.asyncTest('ClientLogin invalid username', function() {
     request.post(SERVER + '/accounts/ClientLogin', function(err, res, body) {
         assert.equal(res.statusCode, 403);
@@ -60,4 +51,36 @@ QUnit.asyncTest('ClientLogin invalid password', function() {
         
         QUnit.start();
     }).form({ Email: 'test@example.com', Passwd: 'invalid' });
+});
+
+QUnit.asyncTest('valid ClientLogin', function() {
+    request.post(SERVER + '/accounts/ClientLogin', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.ok(/SID=.+\n/.test(body));
+        assert.ok(/LSID=.+\n/.test(body));
+        assert.ok(/Auth=.+\n/.test(body));
+        
+        // store for later tests
+        SID = body.match(/SID=(.+)\n/)[1];
+        
+        QUnit.start();
+    }).form({ Email: 'test@example.com', Passwd: 'test' });
+});
+
+QUnit.asyncTest('token auth required', function() {
+    request.get({ url: API + '/token', jar: false }, function(err, res, body) {
+        assert.equal(res.statusCode, 403);
+        assert.equal(body, 'Error=AuthRequired');
+        
+        QUnit.start();
+    });
+});
+
+QUnit.asyncTest('token success', function() {
+    request(API + '/token', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.equal(body.length, 24);
+        
+        QUnit.start();
+    });
 });
