@@ -1,7 +1,8 @@
-var mongoose = require('mongoose');
-var dbHelper = require('../dbHelper')
+var mongoose = require('mongoose'),
+    utils = require('../utils');
+
 var Tag = mongoose.Schema({
-    user: dbHelper.ref('User'),
+    user: utils.ref('User'),
     type: String,       // state or label
     name: String,
     sortID: Number

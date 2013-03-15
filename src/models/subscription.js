@@ -1,9 +1,10 @@
-var mongoose = require('mongoose');
-var dbHelper = require('../dbHelper')
+var mongoose = require('mongoose'),
+    utils = require('../utils');
+
 var Subscription = mongoose.Schema({
     title: String,      // the user is allowed to rename subscriptions
-    feed: dbHelper.ref('Feed'),
-    tags: [dbHelper.ref('Tag')],
+    feed: utils.ref('Feed'),
+    tags: [utils.ref('Tag')],
     sortID: Number
 });
 
