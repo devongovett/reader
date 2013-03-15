@@ -20,6 +20,8 @@ Some interesting modules to investigate:
 Some unofficial API documentation on the old Google Reader API that we'd be copying
 
 * http://undoc.in
+* http://ranchero.com/downloads/GoogleReaderAPI-2009.pdf
+* http://code.google.com/p/pyrfeed/wiki/GoogleReaderAPI
 
 ## Want to help?
 

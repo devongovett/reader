@@ -7,4 +7,4 @@ var Tag = mongoose.Schema({
     sortID: Number
 });
 
-module.exports = mongoose.model('Tag', Tag)
+module.exports = mongoose.model('Tag', Tag);
