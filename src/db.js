@@ -1,13 +1,5 @@
 var mongoose = require('mongoose');
 
-// add a helper function used in the models
-mongoose.ref = function(type) {
-    return {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: type
-    };
-};
-
 // export the modules
 exports.Feed = require('./models/feed');
 exports.Post = require('./models/post');
