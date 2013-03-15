@@ -5,7 +5,7 @@ var mongoose = require('mongoose'),
 var SALT_WORK_FACTOR = 10;
 
 var User = mongoose.Schema({
-    username: { type: String, required: true, unique: true },
+    username: { type: String, required: true, index: { unique: true } },
     password: { type: String, required: true },
     subscriptions: [Subscription]
 });
