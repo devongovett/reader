@@ -1,5 +1,5 @@
 var mongoose = require('mongoose'),
-    xml = require('xmljs');
+    xml = require('libxmljs');
 
 exports.ref = function(type) {
     return {

@@ -125,7 +125,7 @@ QUnit.asyncTest('user-info xml', function() {
     });
 });
 
-QUnit.asyncTest('user-info invalid output', function() {
+QUnit.asyncTest('user-info invalid format', function() {
     request(API + '/user-info?output=invalid', function(err, res, body) {
         assert.equal(res.statusCode, 400);
         assert.equal(body, 'Invalid output format');
