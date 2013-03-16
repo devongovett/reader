@@ -1,9 +1,10 @@
 ## What is this?
 
-Google reader is shutting down.  A lot of people use it.  A lot of apps depend on its API.  
+Google reader is shutting down.  A lot of people use it.  A lot of apps depend on its API.
 This project will be an attempt to create an API compatible replacement so those apps will 
 continue to work by simply changing the API end point.  I have no plans to build a frontend UI 
-replacement, just the backend API.
+replacement, just the backend API.  Once we have the Google Reader API working, we may be able
+to add extensions to it so that apps can add additional features that weren't previously possible.
 
 ## Tech
 
@@ -36,7 +37,8 @@ Things to work on:
 * Testing
 * etc. We are young!
 
-Check out the [issues](https://github.com/devongovett/reader/issues) for more details.
+Check out the [issues](https://github.com/devongovett/reader/issues) for more details.  If you're
+working on something, please mark it so we don't duplicate effort.
 
 ## Installation
 
