@@ -19,5 +19,9 @@
       "qunit-cli": "*",
       "request": "2.x",
       "libxmljs": "0.7.x"
+  },
+  "scripts": {
+      "start": "node src/api.js",
+      "test": "node tests/api.js"
   }
 }

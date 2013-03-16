@@ -47,11 +47,11 @@ Check out the [issues](https://github.com/devongovett/reader/issues) for more de
 
 Run the API server with:
 
-    node src/api.js
+    npm start
     
 Or run the tests with:
 
-    node tests/api.js
+    npm test
 
 ## License
 
