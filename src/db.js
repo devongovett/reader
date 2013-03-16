@@ -8,13 +8,25 @@ exports.Tag = require('./models/tag');
 exports.Subscription = require('./models/subscription');
 
 // connect to the database
-mongoose.connect('mongodb://localhost/reader');
-var db = mongoose.connection;
+exports.connect = function(database) {
+    mongoose.connect('mongodb://localhost/' + (database || 'reader'));
+    var db = mongoose.connection;
 
-db.on('error', function(err) {
-    console.error(err);
-});
+    db.on('error', function(err) {
+        console.error(err);
+    });
 
-db.once('open', function() {
-    console.log('Connected to Mongo!');
-});
+    db.once('open', function() {
+        console.log('Connected to Mongo!');
+    });
+    
+    return db;
+};
+
+// used by the tests
+exports.dropDatabase = function(callback) {
+    if (!mongoose.connection) 
+        return callback(new Error('Not connected'));
+        
+    mongoose.connection.db.dropDatabase(callback);
+};
