@@ -44,3 +44,7 @@ Check out the [issues](https://github.com/devongovett/reader/issues) for more de
 2. [Install Node.js](http://nodejs.org/) if you haven't already.
 3. Clone this repo using Git
 4. Run `npm install` to install the dependencies
+
+## License
+
+MIT
