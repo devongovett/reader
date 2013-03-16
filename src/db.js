@@ -17,9 +17,4 @@ db.on('error', function(err) {
 
 db.once('open', function() {
     console.log('Connected to Mongo!');
-    
-    // test
-    exports.User.find(function(err, users) {
-        console.log(users);
-    });
 });

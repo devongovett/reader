@@ -8,6 +8,23 @@ exports.ref = function(type) {
     };
 };
 
+exports.respond = function(res, response) {
+    var format = res.req.query.output || 'json';
+    
+    switch (format) {
+        case 'json':
+            return res.json(response);
+            
+        case 'xml':
+            var doc = new xml.Document();
+            generateXML(doc, response);
+            return res.type('xml').send(doc.toString());
+            
+        default: 
+            res.status(400).send('Invalid output format');
+    }
+};
+
 function generateXML(parent, object) {
     if (Array.isArray(object)) {
         var node = parent.node('list');
@@ -27,20 +44,3 @@ function generateXML(parent, object) {
     
     return node;
 }
-
-exports.respond = function(res, response) {
-    var format = res.req.query.output || 'json';
-    
-    switch (format) {
-        case 'json':
-            return res.json(response);
-            
-        case 'xml':
-            var doc = new xml.Document();
-            generateXML(doc, response);
-            return res.type('xml').send(doc.toString());
-            
-        default: 
-            res.status(400).send('Invalid output format');
-    }
-};
