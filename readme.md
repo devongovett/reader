@@ -36,6 +36,8 @@ Things to work on:
 * Testing
 * etc. We are young!
 
+Check out the [issues](https://github.com/devongovett/reader/issues) for more details.
+
 ## Installation
 
 1. [Install MongoDB](http://docs.mongodb.org/manual/installation/) if you haven't already.
