@@ -45,6 +45,14 @@ Check out the [issues](https://github.com/devongovett/reader/issues) for more de
 3. Clone this repo using Git
 4. Run `npm install` to install the dependencies
 
+Run the API server with:
+
+    node src/api.js
+    
+Or run the tests with:
+
+    node tests/api.js
+
 ## License
 
 MIT
