@@ -9,7 +9,7 @@ replacement, just the backend API.
 
 * [Node.js](http://nodejs.org/)
 * [MongoDB](http://www.mongodb.org) (so I can try something new!)
-* [Express](http://expressjs.org/)
+* [Express](http://expressjs.com/)
 * [Mongoose](http://mongoosejs.com/)
 
 Some interesting modules to investigate:
