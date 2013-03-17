@@ -18,7 +18,9 @@
       "bcrypt": ">=0.7.5",
       "qunit-cli": "*",
       "request": "2.x",
-      "libxmljs": "0.7.x"
+      "libxmljs": "0.7.x",
+      "feedparser": "0.13.x",
+      "nock": "0.16.x"
   },
   "scripts": {
       "start": "node src/api.js",

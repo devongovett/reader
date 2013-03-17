@@ -17,7 +17,7 @@ Feeder.prototype = new EventEmitter;
 Feeder.prototype.start = function() {
     var feeder = this;
     
-    feeder._loadFeed();
+    feeder.reload();
     feeder.once('meta', function(meta) {
         switch (meta.cloud.type) {
             // case 'hub': // pubsubhubbub supported
@@ -27,7 +27,7 @@ Feeder.prototype.start = function() {
             //     break;
                 
             default: // we have to poll
-                var fn = feeder._loadFeed.bind(feeder);
+                var fn = feeder.reload.bind(feeder);
                 feeder._interval = setInterval(fn, feeder.interval * 60 * 1000);
         }
     });
@@ -44,7 +44,7 @@ Feeder.prototype.stop = function() {
 };
 
 // Internal method to actually load the feed
-Feeder.prototype._loadFeed = function(callback) {
+Feeder.prototype.reload = function(callback) {
     var feeder = this;
     
     var parser = feedparser.parseUrl({
@@ -75,13 +75,14 @@ Feeder.prototype._loadFeed = function(callback) {
         if (!feeder.posts[id])
             feeder.emit('post', post);
             
-        else if (post.date !== feeder.posts[id].date)
+        else if (+post.date !== +feeder.posts[id].date)
             feeder.emit('update', post);
             
         feeder.posts[id] = post;
     });
     
     parser.on('end', function() {
+        feeder.emit('loadEnd');
         if (callback) callback(null);
     });
     
