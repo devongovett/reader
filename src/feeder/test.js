@@ -11,9 +11,13 @@ var host = 'http://example.com',
     tests = __dirname + '/test_data';
     
 var postCount = 0,
-    updateCount = 0;
+    updateCount = 0,
+    metaCount = 0;
     
 var feed = new feeder.Feeder(url)
+    .on('meta', function(meta) {
+        metaCount++;
+    })
     .on('post', function(post) {
         postCount++;
     })
@@ -39,10 +43,11 @@ QUnit.asyncTest('initial load', function() {
     feed.once('loadEnd', function() {
         assert.equal(postCount, 3);
         assert.equal(updateCount, 0);
+        assert.equal(metaCount, 1);
         QUnit.start();
     });
         
-    postCount = updateCount = 0;
+    postCount = updateCount = metaCount = 0;
     feed.start();
 });
 
@@ -54,10 +59,11 @@ QUnit.asyncTest('no update', function() {
     feed.once('loadEnd', function() {
         assert.equal(postCount, 0);
         assert.equal(updateCount, 0);
+        assert.equal(metaCount, 0);
         QUnit.start();
     });
         
-    postCount = updateCount = 0;
+    postCount = updateCount = metaCount = 0;
     feed.reload();
 });
 
@@ -69,10 +75,11 @@ QUnit.asyncTest('add posts', function() {
     feed.once('loadEnd', function() {
         assert.equal(postCount, 2);
         assert.equal(updateCount, 0);
+        assert.equal(metaCount, 0);
         QUnit.start();
     });
         
-    postCount = updateCount = 0;
+    postCount = updateCount = metaCount = 0;
     feed.reload();
 });
 
@@ -84,10 +91,27 @@ QUnit.asyncTest('update post', function() {
     feed.once('loadEnd', function() {
         assert.equal(postCount, 0);
         assert.equal(updateCount, 1);
+        assert.equal(metaCount, 0);
         QUnit.start();
     });
         
-    postCount = updateCount = 0;
+    postCount = updateCount = metaCount = 0;
+    feed.reload();
+});
+
+QUnit.asyncTest('meta changed', function() {
+    nock(host)
+        .get(path)
+        .replyWithFile(200, tests + '/update_meta.xml');
+        
+    feed.once('loadEnd', function() {
+        assert.equal(postCount, 0);
+        assert.equal(updateCount, 0);
+        assert.equal(metaCount, 1);
+        QUnit.start();
+    });
+        
+    postCount = updateCount = metaCount = 0;
     feed.reload();
 });
 

@@ -1,4 +1,5 @@
 var feedparser = require('feedparser'),
+    deepEqual = require('deep-equal'),
     EventEmitter = require('events').EventEmitter;
 
 function Feeder(url, options) {
@@ -65,8 +66,10 @@ Feeder.prototype.reload = function(callback) {
     });
     
     parser.on('meta', function(meta) {
-        feeder.meta = meta;
-        feeder.emit('meta', meta);
+        if (!deepEqual(meta, feeder.meta)) {
+            feeder.meta = meta;
+            feeder.emit('meta', meta);
+        }
     });
     
     parser.on('article', function(post) {

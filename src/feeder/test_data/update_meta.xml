@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" version="2.0">
+    <channel>
+        <title>Example Blog</title>
+        <description>This is the new description</description>
+        <link>http://example.com/</link>
+        <item>
+            <title>A New Post 1</title>
+            <description>This is the main content of new post 1. Isn't it great?</description>
+            <link>http://example.com/blog/5</link>
+            <guid>http://example.com/blog/5</guid>
+            <pubDate>Fri, 08 Mar 2013 01:37:27 -0800</pubDate>
+        </item>
+        <item>
+            <title>A New Post 2</title>
+            <description>This is the main content of new post 2. Isn't it great?</description>
+            <link>http://example.com/blog/4</link>
+            <guid>http://example.com/blog/4</guid>
+            <pubDate>Fri, 08 Mar 2013 12:16:33 -0800</pubDate>
+        </item>
+        <item>
+            <title>A Test Post 1</title>
+            <description>This is the main content of post 1. Isn't it great?</description>
+            <link>http://example.com/blog/1</link>
+            <guid>http://example.com/blog/1</guid>
+            <pubDate>Thu, 07 Mar 2013 07:37:47 -0800</pubDate>
+        </item>
+        <item>
+            <title>Updated Title</title>
+            <description>This is the updated post. Isn't it great?</description>
+            <link>http://example.com/blog/2</link>
+            <guid>http://example.com/blog/2</guid>
+            <pubDate>Fri, 08 Mar 2013 02:32:13 -0800</pubDate>
+        </item>
+        <item>
+            <title>A Test Post 3</title>
+            <description>This is the main content of post 3. Isn't it great?</description>
+            <link>http://example.com/blog/3</link>
+            <guid>http://example.com/blog/3</guid>
+            <pubDate>Tue, 05 Mar 2013 01:03:24 -0800</pubDate>
+        </item>
+    </channel>
+</rss>
