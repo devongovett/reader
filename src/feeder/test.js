@@ -51,6 +51,25 @@ QUnit.asyncTest('initial load', function() {
     feed.start();
 });
 
+QUnit.asyncTest('startDate', function() {
+    nock(host)
+        .get(path)
+        .replyWithFile(200, tests + '/old.xml');
+        
+    feed.once('loadEnd', function() {
+        assert.equal(postCount, 1);
+        assert.equal(updateCount, 0);
+        assert.equal(metaCount, 1);
+        QUnit.start();
+    });
+    
+    postCount = updateCount = metaCount = 0;
+    feed.meta = null;
+    feed.lastDate = new Date('Wed, 06 Mar 2013 02:32:13 -0800');
+    feed._posts = {};
+    feed.reload();
+});
+
 QUnit.asyncTest('no update', function() {
     nock(host)
         .get(path)
