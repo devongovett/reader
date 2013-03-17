@@ -6,8 +6,10 @@ function Feeder(url, options) {
     options = options || {};
     this.url = url;
     this.interval = options.interval || 10; // interval to poll in minutes
+    this.lastDate = options.startDate || 0;
+    
     this.meta = null;
-    this.posts = {};
+    this._posts = {};
     this._interval = null;
     this._headers = {};
 }
@@ -46,7 +48,8 @@ Feeder.prototype.stop = function() {
 
 // Internal method to actually load the feed
 Feeder.prototype.reload = function(callback) {
-    var feeder = this;
+    var feeder = this,
+        lastDate = feeder.lastDate;
     
     var parser = feedparser.parseUrl({
         url: feeder.url,
@@ -75,16 +78,18 @@ Feeder.prototype.reload = function(callback) {
     parser.on('article', function(post) {
         var id = post.guid || post.link;
         
-        if (!feeder.posts[id])
+        if (!feeder._posts[id] && post.pubDate > feeder.lastDate)
             feeder.emit('post', post);
             
-        else if (+post.date !== +feeder.posts[id].date)
+        else if (post.date > feeder.lastDate)
             feeder.emit('update', post);
             
-        feeder.posts[id] = post;
+        feeder._posts[id] = true;
+        lastDate = Math.max(lastDate, post.date);
     });
     
     parser.on('end', function() {
+        feeder.lastDate = lastDate;
         feeder.emit('loadEnd');
         if (callback) callback(null);
     });
