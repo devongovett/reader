@@ -21,7 +21,7 @@ exports.respond = function(res, response) {
             return res.type('xml').send(doc.toString());
             
         default: 
-            res.status(400).send('Invalid output format');
+            res.send(400, 'Invalid output format');
     }
 };
 
@@ -44,3 +44,28 @@ function generateXML(parent, object) {
     
     return node;
 }
+
+exports.parseTags = function(tags, user) {
+    if (!tags)
+        return null;
+        
+    if (!Array.isArray(tags))
+        tags = [tags];
+        
+    for (var i = 0; i < tags.length; i++) {
+        var tag = tags[i];
+        if (!tag)
+            return null;
+            
+        var match = tag.match(/^user\/(.+)\/(state|label)\/(.+)$/);
+        if (!match || match[1] !== user)
+            return null;
+            
+        tags[i] = {
+            type: match[2],
+            name: match[3]
+        };
+    }
+    
+    return tags;
+};

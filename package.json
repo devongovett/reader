@@ -16,6 +16,7 @@
       "mongoose": ">=3.5",
       "express": "3.x",
       "bcrypt": ">=0.7.5",
+      "validator": "0.4.x",
       "qunit-cli": "*",
       "request": "2.x",
       "libxmljs": "0.7.x",

@@ -6,6 +6,7 @@ var app = require('../src/api'),
 
 // run tests
 require('./api/user');
+require('./api/subscription');
 
 // destroy the testing database when we're done
 QUnit.done(function() {
