@@ -25,6 +25,12 @@ Some unofficial API documentation on the old Google Reader API that we'd be copy
 * http://code.google.com/p/pyrfeed/wiki/GoogleReaderAPI
 * https://developers.google.com/accounts/docs/AuthForInstalledApps
 
+Some documentation on the dirtier side of RSS/Atom feeds:
+https://docs.google.com/document/d/1cvq67iQpk2C7ufOsefsfKnGCXeUIv46NQHbnHkm8PtU/edit?usp=sharing
+
+A mailing list discussing the future of RSS syncing:
+http://lists.ranchero.com/listinfo.cgi/rss-sync-ranchero.com
+
 ## Want to help?
 
 Get in touch on [Twitter](http://twitter.com/devongovett) or IRC (#reader on Freenode) 
