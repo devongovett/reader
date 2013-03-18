@@ -5,7 +5,6 @@ var QUnit = require('qunit-cli'),
     
 var SERVER = 'http://localhost:3456';
 var API = SERVER + '/reader/api/0';
-var SID;
 
 QUnit.module('Auth');
 
@@ -60,9 +59,6 @@ QUnit.asyncTest('valid ClientLogin', function() {
         assert.ok(/SID=.+\n/.test(body));
         assert.ok(/LSID=.+\n/.test(body));
         assert.ok(/Auth=.+\n/.test(body));
-        
-        // store for later tests
-        SID = body.match(/SID=(.+)\n/)[1];
         
         QUnit.start();
     }).form({ Email: 'test@example.com', Passwd: 'test' });
