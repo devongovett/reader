@@ -9,20 +9,18 @@ var app = module.exports = express();
 // see https://developers.google.com/accounts/docs/AuthForInstalledApps
 app.post('/accounts/ClientLogin', function(req, res) {
     res.type('text');
-    req.session.authorized = false;
     req.session.user = null;
     req.session.token = null;
     
     db.User.findOne({ username: req.body.Email }, function(err, user) {
         if (err || !user)
-            return res.status(403).send('Error=BadAuthentication');
+            return res.send(403, 'Error=BadAuthentication');
             
         user.checkPassword(req.body.Passwd, function(err, matched) {
             if (err || !matched)
-                return res.status(403).send('Error=BadAuthentication');
+                return res.send(403, 'Error=BadAuthentication');
                 
-            req.session.authorized = true;
-            req.session.user = user;
+            req.session.user = user.id;
             req.session.token = null;
             
             // clients *should* only care about SID, but we'll include all
@@ -47,12 +45,12 @@ app.post('/accounts/register', function(req, res) {
     user.save(function(err) {
         if (err && err.name == 'MongoError') {
             if (err.code == 11000)
-                res.status(400).send('Error=DuplicateUser');
+                res.send(400, 'Error=DuplicateUser');
             else
-                res.status(500).send('Error=Unknown');
+                res.send(500, 'Error=Unknown');
                 
         } else if (err && err.name == 'ValidationError') {
-            res.status(400).send('Error=BadRequest');
+            res.send(400, 'Error=BadRequest');
             
         } else {
             res.send('OK');
@@ -63,12 +61,12 @@ app.post('/accounts/register', function(req, res) {
 app.get('/reader/api/0/token', function(req, res) {
     res.type('text');
     
-    if (!req.session.authorized)
-        return res.status(401).send('Error=AuthRequired');
+    if (!req.user)
+        return res.send(401, 'Error=AuthRequired');
     
     crypto.randomBytes(24, function(err, buf) {
         if (err)
-            return res.status(500).send('Error=Unknown');
+            return res.send(500, 'Error=Unknown');
             
         req.session.token = buf.toString('hex').slice(0, 24);
         res.send(req.session.token);
@@ -76,17 +74,17 @@ app.get('/reader/api/0/token', function(req, res) {
 });
 
 app.get('/reader/api/0/user-info', function(req, res) {
-    if (!req.session.authorized)
-        return res.status(401).send('Error=AuthRequired');
+    if (!req.user)
+        return res.send(401, 'Error=AuthRequired');
         
-    var user = req.session.user;
+    var user = req.user;
     utils.respond(res, {
-        userId: user._id,
+        userId: user.id,
         userName: user.username.split('@')[0],
-        userProfileId: user._id, // not sure how this is different from userId
+        userProfileId: user.id, // not sure how this is different from userId
         userEmail: user.username,
         isBloggerUser: false,
-        signupTimeSec: Math.round(new Date(user.signupTime) / 1000),
+        signupTimeSec: Math.round(user.signupTime / 1000),
         // publicUserName?
         isMultiLoginEnabled: false
     });

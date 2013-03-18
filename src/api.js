@@ -12,6 +12,17 @@ app.use(express.bodyParser());
 app.use(express.cookieParser('gobbledygook'));
 app.use(express.session({ key: 'SID' }));
 
+// loads the currently logged in user into req.user
+app.use(function(req, res, next) {
+    if (!req.session.user)
+        return next();
+        
+    db.User.findOne(req.session.user, function(err, user) {
+        req.user = user;
+        next();
+    });
+});
+
 // configuration
 app.configure('development', function() {
     app.set('db', 'reader');
