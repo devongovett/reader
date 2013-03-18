@@ -95,6 +95,7 @@ QUnit.test('parseTags', function() {
     ]);
     
     assert.equal(utils.parseTags(['user/id/label/test', null], 'id'), null);
+    assert.equal(utils.parseTags(['user/id/label/test', 1], 'id'), null);
     assert.equal(utils.parseTags(['user/id/label/test', 'invalid'], 'id'), null);
 });
 

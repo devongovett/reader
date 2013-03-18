@@ -53,11 +53,7 @@ exports.parseTags = function(tags, user) {
         tags = [tags];
         
     for (var i = 0; i < tags.length; i++) {
-        var tag = tags[i];
-        if (!tag)
-            return null;
-            
-        var match = tag.match(/^user\/(.+)\/(state|label)\/(.+)$/);
+        var match = /^user\/(.+)\/(state|label)\/(.+)$/.exec(tags[i]);
         if (!match || match[1] !== user)
             return null;
             
