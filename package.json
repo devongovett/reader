@@ -13,7 +13,7 @@
   },
   "bugs": "http://github.com/devongovett/reader/issues",
   "dependencies": {
-      "mongoose": ">=3.5",
+      "mongoose": "3.6.x",
       "express": "3.x",
       "bcrypt": ">=0.7.5",
       "validator": "0.4.x",
