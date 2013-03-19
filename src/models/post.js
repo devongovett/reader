@@ -5,12 +5,15 @@ var mongoose = require('mongoose'),
 // User specific tags stored here to avoid having separate 
 // post records for each user
 var Post = mongoose.Schema({
+    guid: String,
     title: String,
-    description: String,
+    body: String,
+    summary: String,
     url: String,
     date: Date,
     author: String,
-    body: String,
+    comments: String,
+    categories: [String],
     tags: [utils.ref('Tag')]
 });
 

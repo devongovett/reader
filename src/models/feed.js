@@ -4,6 +4,11 @@ var mongoose = require('mongoose'),
 // A Feed containing posts, shared across all users
 var Feed = mongoose.Schema({
     title: String,
+    description: String,
+    author: String,
+    language: String,
+    copyright: String,
+    categories: [String],
     feedURL: { type: String, index: { unique: true }},
     siteURL: String,
     posts: [Post],

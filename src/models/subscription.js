@@ -3,7 +3,7 @@ var mongoose = require('mongoose'),
 
 var Subscription = mongoose.Schema({
     title: String,      // the user is allowed to rename subscriptions
-    feed: utils.ref('Feed'),
+    feed: { type: utils.ref('Feed'), index: { unique: true }},
     tags: [utils.ref('Tag')],
     sortID: Number
 });
