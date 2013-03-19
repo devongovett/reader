@@ -54,7 +54,9 @@ exports.parseTags = function(tags, user) {
         
     for (var i = 0; i < tags.length; i++) {
         var match = /^user\/(.+)\/(state|label)\/(.+)$/.exec(tags[i]);
-        if (!match || match[1] !== user)
+        
+        // allow user/<userId>/state/foo and also user/-/state/foo
+        if (!match || (match[1] !== user && match[1] != '-'))
             return null;
             
         tags[i] = {

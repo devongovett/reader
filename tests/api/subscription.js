@@ -89,6 +89,11 @@ QUnit.test('parseTags', function() {
         { type: 'label', name: 'test' }
     ]);
     
+    // google reader also allows the userId to be replaced with a -
+    assert.deepEqual(utils.parseTags('user/-/label/test', 'id'), [
+        { type: 'label', name: 'test' }
+    ]);
+    
     assert.deepEqual(utils.parseTags(['user/id/label/test', 'user/id/state/com.google/read'], 'id'), [
         { type: 'label', name: 'test' },
         { type: 'state', name: 'com.google/read' }
