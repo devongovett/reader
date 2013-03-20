@@ -30,10 +30,22 @@ app.post('/reader/api/0/subscription/edit', function(req, res) {
         
     switch (req.body.ac) {
         case 'subscribe':
+            // 1. Find or add a Feed for this URL
+            // 2. Find or add a Subscription for the feed
+            // 3. Increment feed.numSubscribers if a subscription is added
+            // 4. Add tags and update title (see edit action)
         
         case 'unsubscribe':
+            // 1. Find a Feed for this URL
+            // 2. Delete Subscription for this feed
+            // 3. Decrement feed.numSubscribers
+            // 4. If feed.numSubscribers is 0, delete feed
         
         case 'edit':
+            // 1. Find a Feed for this URL
+            // 2. Find Subscription for this URL
+            // 3. Update subscription.title if needed
+            // 4. Add or create tags and add them to subscription
         
         default:
             return res.send(400, 'Error=UnknownAction');
