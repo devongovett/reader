@@ -11,6 +11,7 @@ app.post('/accounts/ClientLogin', function(req, res) {
     res.type('text');
     req.session.user = null;
     req.session.token = null;
+    req.session.tokenExpiry = null;
     
     db.User.findOne({ username: req.body.Email }, function(err, user) {
         if (err || !user)
@@ -21,7 +22,6 @@ app.post('/accounts/ClientLogin', function(req, res) {
                 return res.send(403, 'Error=BadAuthentication');
                 
             req.session.user = user.id;
-            req.session.token = null;
             
             // clients *should* only care about SID, but we'll include all
             // of Google's fields just in case
@@ -61,21 +61,22 @@ app.post('/accounts/register', function(req, res) {
 app.get('/reader/api/0/token', function(req, res) {
     res.type('text');
     
-    if (!req.user)
-        return res.send(401, 'Error=AuthRequired');
+    if (!utils.checkAuth(req, res))
+        return;
     
     crypto.randomBytes(24, function(err, buf) {
         if (err)
             return res.send(500, 'Error=Unknown');
             
         req.session.token = buf.toString('hex').slice(0, 24);
+        req.session.tokenExpiry = Date.now() + 30 * 60 * 1000; // token expires in 30 minutes
         res.send(req.session.token);
     });
 });
 
 app.get('/reader/api/0/user-info', function(req, res) {
-    if (!req.user)
-        return res.send(401, 'Error=AuthRequired');
+    if (!utils.checkAuth(req, res))
+        return;
         
     var user = req.user;
     utils.respond(res, {

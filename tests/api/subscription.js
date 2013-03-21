@@ -8,6 +8,14 @@ var token, userId;
 
 QUnit.module('Subscription');
 
+QUnit.asyncTest('subscribe unauthenticated', function() {
+    request.post(API + '/subscription/edit', { jar: false }, function(err, res, body) {
+        assert.equal(res.statusCode, 401);
+        assert.equal(body, 'Error=AuthRequired');
+        QUnit.start();
+    }).form({ s: 'feed/http://feeds.feedburner.com/WSwI', ac: 'subscribe' });
+});
+
 QUnit.asyncTest('subscribe missing token', function() {
     request.post(API + '/subscription/edit', function(err, res, body) {
         assert.equal(res.statusCode, 400);

@@ -12,11 +12,8 @@ var validator = new Validator;
 validator.error = function() { return false; }
 
 app.post('/reader/api/0/subscription/edit', function(req, res) {
-    if (!req.user)
-        return res.send(401, 'Error=AuthRequired');
-            
-    if (req.body.T !== req.session.token)
-        return res.send(400, 'Error=InvalidToken');
+    if (!utils.checkAuth(req, res, true))
+        return;
         
     if (!req.body.s)
         return res.send(400, 'Error=MissingStream');

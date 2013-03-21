@@ -45,6 +45,27 @@ function generateXML(parent, object) {
     return node;
 }
 
+exports.checkAuth = function(req, res, checkToken) {
+    if (!req.user) {
+        res.send(401, 'Error=AuthRequired');
+        return false;
+    }
+    
+    if (!checkToken)
+        return true;
+    
+    var ret = req.body.T &&
+              req.body.T === req.session.token &&
+              Date.now() < req.session.tokenExpiry;
+              
+    if (!ret) {
+        res.set('X-Reader-Google-Bad-Token', 'true')
+           .send(400, 'Error=InvalidToken');
+    }
+        
+    return ret;
+};
+
 exports.parseTags = function(tags, user) {
     if (!tags)
         return null;
