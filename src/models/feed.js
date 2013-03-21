@@ -1,5 +1,5 @@
 var mongoose = require('mongoose'),
-    Post = require('./post');
+    utils = require('../utils');
 
 // A Feed containing posts, shared across all users
 var Feed = mongoose.Schema({
@@ -11,7 +11,7 @@ var Feed = mongoose.Schema({
     categories: [String],
     feedURL: { type: String, index: { unique: true }},
     siteURL: String,
-    posts: [Post],
+    posts: [utils.ref('Post')],
     numSubscribers: Number,
     successfulCrawlTime: Date,
     failedCrawlTime: Date,
