@@ -24,8 +24,11 @@ app.post('/reader/api/0/subscription/edit', function(req, res) {
     if (!/^feed\//.test(req.body.s) || !validator.check(req.body.s.slice(5)).isUrl())
         return res.send(400, 'Error=InvalidStream');
         
-    var tags;
-    if (req.body.a && !(tags = utils.parseTags(req.body.a, req.user.id)))
+    var addTags, removeTags;
+    if (req.body.a && !(addTags = utils.parseTags(req.body.a, req.user.id)))
+        return res.send(400, 'Error=InvalidTag');
+        
+    if (req.body.r && !(removeTags = utils.parseTags(req.body.r, req.user.id)))
         return res.send(400, 'Error=InvalidTag');
         
     switch (req.body.ac) {
@@ -33,7 +36,7 @@ app.post('/reader/api/0/subscription/edit', function(req, res) {
             // 1. Find or add a Feed for this URL
             // 2. Find or add a Subscription for the feed
             // 3. Increment feed.numSubscribers if a subscription is added
-            // 4. Add tags and update title (see edit action)
+            // 4. Add/remove tags and update title (see edit action)
         
         case 'unsubscribe':
             // 1. Find a Feed for this URL
@@ -45,7 +48,7 @@ app.post('/reader/api/0/subscription/edit', function(req, res) {
             // 1. Find a Feed for this URL
             // 2. Find Subscription for this URL
             // 3. Update subscription.title if needed
-            // 4. Add or create tags and add them to subscription
+            // 4. Add/remove tags and add them to subscription
         
         default:
             return res.send(400, 'Error=UnknownAction');
