@@ -23,11 +23,9 @@ Feeder.prototype.start = function() {
     feeder.reload();
     feeder.once('meta', function(meta) {
         switch (meta.cloud.type) {
-            // case 'hub': // pubsubhubbub supported
-            //     break;
-            //     
-            // case 'rsscloud': // rsscloud supported
-            //     break;
+            case 'hub': // pubsubhubbub supported
+                
+            case 'rsscloud': // rsscloud supported
                 
             default: // we have to poll
                 var fn = feeder.reload.bind(feeder);
