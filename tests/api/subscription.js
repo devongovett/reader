@@ -37,7 +37,7 @@ QUnit.asyncTest('subscribe missing stream', function() {
         token = body;
         request.post(API + '/subscription/edit', function(err, res, body) {
             assert.equal(res.statusCode, 400);
-            assert.equal(body, 'Error=MissingStream');
+            assert.equal(body, 'Error=InvalidStream');
             QUnit.start();
         }).form({ ac: 'subscribe', T: token });
     });

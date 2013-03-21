@@ -12,21 +12,19 @@ var validator = new Validator;
 validator.error = function() { return false; }
 
 app.post('/reader/api/0/subscription/edit', function(req, res) {
-    var addTags, removeTags, url;
-    
     if (!utils.checkAuth(req, res, true))
         return;
         
-    if (!req.body.s)
-        return res.send(400, 'Error=MissingStream');
-        
-    if (!/^feed\//.test(req.body.s) || !validator.check(url = req.body.s.slice(5)).isUrl())
+    var url = /^feed\//.test(req.body.s) && req.body.s.slice(5);
+    if (!validator.check(url).isUrl())
         return res.send(400, 'Error=InvalidStream');
         
-    if (req.body.a && !(addTags = utils.parseTags(req.body.a, req.user.id)))
+    var addTags = utils.parseTags(req.body.a, req.user.id);
+    if (req.body.a && !addTags)
         return res.send(400, 'Error=InvalidTag');
         
-    if (req.body.r && !(removeTags = utils.parseTags(req.body.r, req.user.id)))
+    var removeTags = utils.parseTags(req.body.r, req.user.id);
+    if (req.body.r && !removeTags)
         return res.send(400, 'Error=InvalidTag');
         
     switch (req.body.ac) {
