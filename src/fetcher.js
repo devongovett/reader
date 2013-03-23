@@ -14,7 +14,7 @@ var UPDATE_INTERVAL = 10 * 60 * 1000;
     
 jobs.process('feed', 20, function(job, done) {
     Feed
-    .findById(job.feedID)
+    .findById(job.data.feedID)
     .populate('posts')
     .exec(function(err, feed) {
         if (err || !feed)
@@ -66,7 +66,7 @@ jobs.process('feed', 20, function(job, done) {
                     guid: guid,
                     title: post.title,
                     body: post.description,
-                    summary: post.summary,
+                    summary: post.summary !== post.description ? post.summary : null,
                     url: post.link,
                     date: post.date,
                     author: post.author,
