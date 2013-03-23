@@ -88,3 +88,18 @@ exports.parseTags = function(tags, user) {
     
     return tags;
 };
+
+exports.findOrCreate = function(model, item, callback) {
+    model.findOne(item, function(err, record) {
+        if (err) 
+            return callback(err);
+            
+        if (!record) {
+            model.create(item, function(err, record) {
+                callback(err, record);
+            });
+        } else {
+            callback(null, record);
+        }
+    });
+};

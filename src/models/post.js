@@ -12,7 +12,7 @@ var Post = mongoose.Schema({
     url: String,
     date: Date,
     author: String,
-    comments: String,
+    commentsURL: String,
     categories: [String],
     tags: [utils.ref('Tag')]
 });

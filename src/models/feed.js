@@ -15,7 +15,9 @@ var Feed = mongoose.Schema({
     numSubscribers: Number,
     successfulCrawlTime: Date,
     failedCrawlTime: Date,
-    lastFailureWasParseFailure: Boolean
+    lastFailureWasParseFailure: Boolean,
+    lastModified: Date,
+    etag: String
 });
 
 module.exports = mongoose.model('Feed', Feed);
