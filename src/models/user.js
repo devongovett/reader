@@ -8,7 +8,7 @@ var User = mongoose.Schema({
     username: { type: String, required: true, index: { unique: true } },
     password: { type: String, required: true },
     signupTime: { type: Date, default: Date.now },
-    subscriptions: [Subscription]
+    subscriptions: [Subscription.schema]
 });
 
 // hash passwords using bcrypt when they are changed

@@ -2,7 +2,8 @@ var express = require('express'),
     Validator = require('validator').Validator,
     db = require('../db'),
     utils = require('../utils'),
-    feeder = require('../feeder/feeder');
+    kue = require('kue'),
+    jobs = kue.createQueue();
     
 var app = module.exports = express();
 
@@ -10,6 +11,16 @@ var app = module.exports = express();
 // FIXME: there has to be a better way to do this
 var validator = new Validator;
 validator.error = function() { return false; }
+
+// Helper function to find a subscription in an array based on a feed
+function findSubscription(subscriptions, feed) {
+    for (var i = 0; i < subscriptions.length; i++) {
+        if (String(subscriptions[i].feed) === feed.id)
+            return subscriptions[i];
+    }
+    
+    return null;
+}
 
 app.post('/reader/api/0/subscription/edit', function(req, res) {
     if (!utils.checkAuth(req, res, true))
@@ -27,12 +38,48 @@ app.post('/reader/api/0/subscription/edit', function(req, res) {
     if (req.body.r && !removeTags)
         return res.send(400, 'Error=InvalidTag');
         
+    var user = req.user;
     switch (req.body.ac) {
         case 'subscribe':
             // 1. Find or add a Feed for this URL
-            // 2. Find or add a Subscription for the feed
-            // 3. Increment feed.numSubscribers if a subscription is added
-            // 4. Add/remove tags and update title (see edit action)
+            utils.findOrCreate(db.Feed, { feedURL: url }, function(err, feed) {
+                if (err)
+                    return res.send(500, 'Error=Unknown');
+                    
+                // If this feed was just added, start a high priority job to fetch it
+                if (feed.numSubscribers === 0) {
+                    jobs.create('feed', { feedID: feed.id })
+                        .priority('high')
+                        .save()
+                }
+                    
+                // 2. Find or add a Subscription for the feed
+                var subscription = findSubscription(user.subscriptions, feed);
+                
+                if (!subscription) {
+                    subscription = new db.Subscription({ feed: feed });
+                    user.subscriptions.push(subscription);
+                    
+                    // 3. Increment feed.numSubscribers if a subscription is added
+                    feed.numSubscribers++;
+                    feed.save();
+                }
+                
+                // 4. Add/remove tags and update title (see edit action)
+                if (req.body.t)
+                    subscription.title = req.body.t;
+                    
+                // TODO: tags
+                    
+                req.user.save(function(err) {
+                    if (err)
+                        return res.send(500, 'Error=Unknown');
+                    
+                    res.send('OK');
+                });
+            });
+            
+            break;
         
         case 'unsubscribe':
             // 1. Find a Feed for this URL
@@ -49,8 +96,6 @@ app.post('/reader/api/0/subscription/edit', function(req, res) {
         default:
             return res.send(400, 'Error=UnknownAction');
     }
-    
-    res.send('OK');
 });
 
 app.get('/reader/api/0/subscription/list', function(req, res) {

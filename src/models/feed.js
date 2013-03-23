@@ -12,7 +12,7 @@ var Feed = mongoose.Schema({
     feedURL: { type: String, index: { unique: true }},
     siteURL: String,
     posts: [utils.ref('Post')],
-    numSubscribers: Number,
+    numSubscribers: { type: Number, default: 0 },
     successfulCrawlTime: Date,
     failedCrawlTime: Date,
     lastFailureWasParseFailure: Boolean,

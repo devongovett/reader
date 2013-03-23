@@ -1,6 +1,7 @@
 var QUnit = require('qunit-cli'),
     assert = QUnit.assert,
     request = require('request'),
+    nock = require('nock'),
     utils = require('../../src/utils');
     
 var API = 'http://localhost:3456/reader/api/0';
@@ -122,5 +123,26 @@ QUnit.asyncTest('invalid action', function() {
         ac: 'invalid',
         T: token,
         a: 'user/' + userId +  '/label/test'
+    });
+});
+
+var host = 'http://example.com',
+    path = '/feed.xml',
+    url = host + path,
+    tests = __dirname + '/../test_data';
+
+QUnit.asyncTest('subscribe', function() {
+    nock(host)
+        .get(path)
+        .replyWithFile(200, tests + '/old.xml');
+    
+    request.post(API + '/subscription/edit', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.equal(body, 'OK');
+        QUnit.start();
+    }).form({ 
+        s: 'feed/' + url,
+        ac: 'subscribe',
+        T: token
     });
 });

@@ -21,13 +21,11 @@ var host = 'http://example.com',
 function check(object, keys) {
     for (var key in keys) {
         if (Array.isArray(keys[key])) {
-            if (!Array.isArray(object[key]) || object[key].length !== keys[key].length) {
-                assert.ok(false, 'Invalid');
-            } else {
-                object[key].forEach(function(val, i) {
-                    check(val, keys[key][i])
-                });
-            }
+            assert.ok(Array.isArray(object[key]), 'must be an array');
+            assert.equal(object[key].length, keys[key].length);
+            object[key].forEach(function(val, i) {
+                check(val, keys[key][i])
+            });
         } else {
             assert.deepEqual(object[key], keys[key]);
         }
