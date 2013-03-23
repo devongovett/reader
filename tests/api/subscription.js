@@ -4,6 +4,9 @@ var QUnit = require('qunit-cli'),
     nock = require('nock'),
     utils = require('../../src/utils');
     
+// start fetcher
+require('../../src/fetcher');
+    
 var API = 'http://localhost:3456/reader/api/0';
 var token, userId;
 
@@ -144,5 +147,29 @@ QUnit.asyncTest('subscribe', function() {
         s: 'feed/' + url,
         ac: 'subscribe',
         T: token
+    });
+});
+
+QUnit.asyncTest('subscription list', function() {
+    nock(host)
+        .get(path)
+        .replyWithFile(200, tests + '/old.xml');
+    
+    request(API + '/subscription/list', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.ok(/json/.test(res.headers['content-type']));
+        
+        body = JSON.parse(body);
+        assert.deepEqual(body, {
+            subscriptions: [{
+                id: 'feed/http://example.com/feed.xml',
+                title: 'Test Blog',
+                firstitemmsec: 0,
+                sortid: 0,
+                categories: []
+            }]
+        });
+        
+        QUnit.start();
     });
 });

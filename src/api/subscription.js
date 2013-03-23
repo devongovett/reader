@@ -99,7 +99,32 @@ app.post('/reader/api/0/subscription/edit', function(req, res) {
 });
 
 app.get('/reader/api/0/subscription/list', function(req, res) {
-    
+    if (!utils.checkAuth(req, res))
+        return;
+        
+    req.user.populate('subscriptions.feed subscriptions.tags', function(err, user) {
+        var subscriptions = user.subscriptions.map(function(subscription) {
+            var categories = subscription.tags.map(function(tag) {
+                // TODO: check whether this only includes tags of type 'label'
+                return {
+                    id: 'user/' + user.id + '/' + tag.type + '/' + tag.name,
+                    label: tag.name
+                };
+            });
+            
+            return {
+                id: 'feed/' + subscription.feed.feedURL,
+                title: subscription.title || subscription.feed.title || '(title unknown)',
+                firstitemmsec: 0, // TODO
+                sortid: 0,
+                categories: categories
+            };
+        });
+        
+        utils.respond(res, {
+            subscriptions: subscriptions
+        });
+    });
 });
 
 app.get('/reader/api/0/subscription/export', function(req, res) {
