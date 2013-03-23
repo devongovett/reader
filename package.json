@@ -21,6 +21,7 @@
       "request": "2.x",
       "libxmljs": "0.7.x",
       "feedparser": "0.13.x",
+      "kue": "0.6.x",
       "deep-equal": "*",
       "nock": "0.16.x"
   },
