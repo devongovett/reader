@@ -1,4 +1,5 @@
 var mongoose = require('mongoose'),
+    async = require('async'),
     utils = require('../utils');
 
 // A Feed containing posts, shared across all users
@@ -18,6 +19,13 @@ var Feed = mongoose.Schema({
     lastFailureWasParseFailure: Boolean,
     lastModified: Date,
     etag: String
+});
+
+Feed.pre('remove', function(callback) {
+    var Post = mongoose.model('Post');
+    async.each(this.posts, function(post, next) {
+        Post.remove(post, next);
+    }, callback);
 });
 
 module.exports = mongoose.model('Feed', Feed);
