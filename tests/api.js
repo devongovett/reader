@@ -12,6 +12,7 @@ require('../src/fetcher');
 // run tests
 require('./api/user');
 require('./api/subscription');
+require('./api/tag');
 
 // destroy the testing database when we're done
 QUnit.done(function() {
