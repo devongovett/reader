@@ -4,9 +4,6 @@ var QUnit = require('qunit-cli'),
     nock = require('nock'),
     utils = require('../../src/utils');
     
-// start fetcher
-require('../../src/fetcher');
-    
 var API = 'http://localhost:3456/reader/api/0';
 var token, userId;
 

@@ -5,6 +5,9 @@ var app = require('../src/api'),
     db = require('../src/db'),
     kue = require('kue'),
     jobs = kue.createQueue();
+    
+// start fetcher
+require('../src/fetcher');
 
 // run tests
 require('./api/user');
