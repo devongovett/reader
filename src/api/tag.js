@@ -25,14 +25,35 @@ app.get('/reader/api/0/tag/list', function(req, res) {
     });
 });
 
-app.get('/reader/api/0/edit-tag', function(req, res) {
-    
+app.post('/reader/api/0/edit-tag', function(req, res) {
+    if (!utils.checkAuth(req, res, true))
+        return;
+        
+        
 });
 
-app.get('/reader/api/0/rename-tag', function(req, res) {
+app.post('/reader/api/0/rename-tag', function(req, res) {
+    if (!utils.checkAuth(req, res, true))
+        return;
+        
+    var source = utils.parseTags(req.body.s, req.user);
+    var dest = utils.parseTags(req.body.dest, req.user);
     
+    if (!source || !dest)
+        return res.send(400, 'Error=InvalidStream');
+        
+    // TODO: if dest is another existing tag, the tags need to be merged
+    db.Tag.update(source[0], dest[0], function(err) {
+        if (err)
+            return res.send(500, 'Error=Unknown');
+            
+        res.send('OK');
+    });
 });
 
-app.get('/reader/api/0/disable-tag', function(req, res) {
+app.post('/reader/api/0/disable-tag', function(req, res) {
+    if (!utils.checkAuth(req, res, true))
+        return;
+        
     
 });
