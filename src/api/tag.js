@@ -1,4 +1,5 @@
 var express = require('express'),
+    async = require('async'),
     db = require('../db'),
     utils = require('../utils');
     
@@ -59,10 +60,27 @@ app.post('/reader/api/0/disable-tag', function(req, res) {
     if (!tag)
         return res.send(400, 'Error=InvalidStream');
         
-    db.Tag.remove(tag[0], function(err) {
+    db.Tag.findOneAndRemove(tag[0], function(err, tag) {
         if (err)
             return res.send(500, 'Error=Unknown');
             
-        res.send('OK');
+        if (tag) {
+            // remove references to this tag from subscriptions and posts
+            req.user.subscriptions.forEach(function(sub) {
+                sub.tags.remove(tag);
+            });
+            
+            async.parallel([
+                req.user.save.bind(req.user),
+                db.Post.update.bind(db.Post, {}, { $pull: { tags: tag }})
+            ], function(err) {
+                if (err)
+                    return res.send(500, 'Error=Unknown');
+                
+                res.send('OK');
+            })
+        } else {
+            res.send('OK');
+        }
     });
 });
