@@ -1,15 +1,13 @@
 var QUnit = require('qunit-cli'),
     assert = QUnit.assert,
     request = require('request'),
-    xml = require('libxmljs');
-    
-var SERVER = 'http://localhost:3456';
-var API = SERVER + '/reader/api/0';
+    xml = require('libxmljs'),
+    shared = require('../shared');
 
 QUnit.module('Auth');
 
 QUnit.asyncTest('register account', function() {
-    request.post(SERVER + '/accounts/register', function(err, res, body) {
+    request.post(shared.server + '/accounts/register', function(err, res, body) {
         assert.equal(res.statusCode, 200);
         assert.equal(body, 'OK');
         
@@ -18,7 +16,7 @@ QUnit.asyncTest('register account', function() {
 });
 
 QUnit.asyncTest('duplicate registration', function() {
-    request.post(SERVER + '/accounts/register', function(err, res, body) {
+    request.post(shared.server + '/accounts/register', function(err, res, body) {
         assert.equal(res.statusCode, 400);
         assert.equal(body, 'Error=DuplicateUser');
         
@@ -27,7 +25,7 @@ QUnit.asyncTest('duplicate registration', function() {
 });
 
 QUnit.asyncTest('invalid registration', function() {
-    request.post(SERVER + '/accounts/register', function(err, res, body) {
+    request.post(shared.server + '/accounts/register', function(err, res, body) {
         assert.equal(res.statusCode, 400);
         assert.equal(body, 'Error=BadRequest');
         
@@ -36,7 +34,7 @@ QUnit.asyncTest('invalid registration', function() {
 });
 
 QUnit.asyncTest('ClientLogin invalid username', function() {
-    request.post(SERVER + '/accounts/ClientLogin', function(err, res, body) {
+    request.post(shared.server + '/accounts/ClientLogin', function(err, res, body) {
         assert.equal(res.statusCode, 403);
         assert.equal(body, 'Error=BadAuthentication');
         
@@ -45,7 +43,7 @@ QUnit.asyncTest('ClientLogin invalid username', function() {
 });
 
 QUnit.asyncTest('ClientLogin invalid password', function() {
-    request.post(SERVER + '/accounts/ClientLogin', function(err, res, body) {
+    request.post(shared.server + '/accounts/ClientLogin', function(err, res, body) {
         assert.equal(res.statusCode, 403);
         assert.equal(body, 'Error=BadAuthentication');
         
@@ -54,7 +52,7 @@ QUnit.asyncTest('ClientLogin invalid password', function() {
 });
 
 QUnit.asyncTest('valid ClientLogin', function() {
-    request.post(SERVER + '/accounts/ClientLogin', function(err, res, body) {
+    request.post(shared.server + '/accounts/ClientLogin', function(err, res, body) {
         assert.equal(res.statusCode, 200);
         assert.ok(/SID=.+\n/.test(body));
         assert.ok(/LSID=.+\n/.test(body));
@@ -65,7 +63,7 @@ QUnit.asyncTest('valid ClientLogin', function() {
 });
 
 QUnit.asyncTest('token auth required', function() {
-    request.get({ url: API + '/token', jar: false }, function(err, res, body) {
+    request.get({ url: shared.api + '/token', jar: false }, function(err, res, body) {
         assert.equal(res.statusCode, 401);
         assert.equal(body, 'Error=AuthRequired');
         
@@ -74,7 +72,9 @@ QUnit.asyncTest('token auth required', function() {
 });
 
 QUnit.asyncTest('token success', function() {
-    request(API + '/token', function(err, res, body) {
+    request(shared.api + '/token', function(err, res, body) {
+        shared.token = body; // save for later
+        
         assert.equal(res.statusCode, 200);
         assert.equal(body.length, 24);
         
@@ -83,7 +83,7 @@ QUnit.asyncTest('token success', function() {
 });
 
 QUnit.asyncTest('user-info', function() {
-    request(API + '/user-info', function(err, res, body) {
+    request(shared.api + '/user-info', function(err, res, body) {
         assert.equal(res.statusCode, 200);
         assert.ok(/json/.test(res.headers['content-type']));
         
@@ -96,12 +96,13 @@ QUnit.asyncTest('user-info', function() {
         assert.equal(typeof body.signupTimeSec, 'number');
         assert.equal(body.isMultiLoginEnabled, false);
         
+        shared.userID = body.userId; // save for later
         QUnit.start();
     });
 });
 
 QUnit.asyncTest('user-info xml', function() {
-    request(API + '/user-info?output=xml', function(err, res, body) {
+    request(shared.api + '/user-info?output=xml', function(err, res, body) {
         assert.equal(res.statusCode, 200);
         assert.ok(/xml/.test(res.headers['content-type']));
         
@@ -122,7 +123,7 @@ QUnit.asyncTest('user-info xml', function() {
 });
 
 QUnit.asyncTest('user-info invalid format', function() {
-    request(API + '/user-info?output=invalid', function(err, res, body) {
+    request(shared.api + '/user-info?output=invalid', function(err, res, body) {
         assert.equal(res.statusCode, 400);
         assert.equal(body, 'Invalid output format');
         QUnit.start();
