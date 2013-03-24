@@ -1,5 +1,4 @@
 var mongoose = require('mongoose'),
-    async = require('async'),
     utils = require('../utils');
 
 // A Feed containing posts, shared across all users
@@ -23,9 +22,7 @@ var Feed = mongoose.Schema({
 
 Feed.pre('remove', function(callback) {
     var Post = mongoose.model('Post');
-    async.each(this.posts, function(post, next) {
-        Post.remove(post, next);
-    }, callback);
+    Post.where('_id').in(this.posts).remove(callback);
 });
 
 module.exports = mongoose.model('Feed', Feed);
