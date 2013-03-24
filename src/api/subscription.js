@@ -121,6 +121,7 @@ var actions = {
     }
 };
 
+// used to subscribe, unsubscribe, or edit tags for user feed subscriptions
 app.post('/reader/api/0/subscription/edit', function(req, res) {
     if (!utils.checkAuth(req, res, true))
         return;
@@ -163,6 +164,7 @@ app.post('/reader/api/0/subscription/edit', function(req, res) {
     });
 });
 
+// lists all of the feeds a user is subscribed to
 app.get('/reader/api/0/subscription/list', function(req, res) {
     if (!utils.checkAuth(req, res))
         return;
@@ -195,10 +197,24 @@ app.get('/reader/api/0/subscription/list', function(req, res) {
     });
 });
 
-app.get('/reader/api/0/subscription/export', function(req, res) {
-    
+// checks to see if a user is subscribed to a particular feed
+app.get('/reader/api/0/subscribed', function(req, res) {
+    var streams = utils.parseStreams(req.query.s);
+    if (!streams)
+        return res.send(400, 'Error=InvalidStream');
+        
+    // Find a feed for the first stream
+    db.Feed.findOne({ feedURL: streams[0] }, function(err, feed) {
+        if (err)
+            return res.send(500, 'Error=Unknown');
+        
+        // Find Subscription for this URL
+        var subscription = findSubscription(req.user.subscriptions, feed);
+        return res.send('' + !!subscription);
+   
+    });
 });
 
-app.get('/reader/api/0/subscribed', function(req, res) {
+app.get('/reader/api/0/subscription/export', function(req, res) {
     
 });

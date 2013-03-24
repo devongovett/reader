@@ -295,3 +295,27 @@ QUnit.asyncTest('subscription list', function() {
         QUnit.start();
     });
 });
+
+QUnit.asyncTest('subscribed', function() {
+    request(API + '/subscribed?s=feed/http://example.com/feed1.xml', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.equal(body, 'true');
+        QUnit.start();
+    });
+});
+
+QUnit.asyncTest('subscribed invalid', function() {
+    request(API + '/subscribed?s=feed/invalid', function(err, res, body) {
+        assert.equal(res.statusCode, 400);
+        assert.equal(body, 'Error=InvalidStream');
+        QUnit.start();
+    });
+});
+
+QUnit.asyncTest('subscribed unknown', function() {
+    request(API + '/subscribed?s=feed/http://unknown.com/', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.equal(body, 'false');
+        QUnit.start();
+    });
+});
