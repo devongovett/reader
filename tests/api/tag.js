@@ -17,6 +17,17 @@ QUnit.asyncTest('rename tag', function() {
     });
 });
 
+QUnit.asyncTest('delete tag', function() {
+    request.post(shared.api + '/disable-tag', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.equal(body, 'OK');
+        QUnit.start();
+    }).form({
+        T: shared.token,
+        s: 'user/-/label/updated'
+    });
+});
+
 QUnit.asyncTest('list tags unauthenticated', function() {
     request(shared.api + '/tag/list', { jar: false }, function(err, res, body) {
         assert.equal(res.statusCode, 401);
@@ -42,8 +53,7 @@ QUnit.asyncTest('list tags', function() {
             tags: [
                 { id: 'user/' + shared.userID + '/label/baz',  sortID: 0 },
                 { id: 'user/' + shared.userID + '/label/foo',  sortID: 0 },
-                { id: 'user/' + shared.userID + '/label/test', sortID: 0 },
-                { id: 'user/' + shared.userID + '/label/updated',  sortID: 0 }
+                { id: 'user/' + shared.userID + '/label/test', sortID: 0 }
             ]
         });
     

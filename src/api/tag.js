@@ -55,5 +55,14 @@ app.post('/reader/api/0/disable-tag', function(req, res) {
     if (!utils.checkAuth(req, res, true))
         return;
         
-    
+    var tag = utils.parseTags(req.body.s, req.user);
+    if (!tag)
+        return res.send(400, 'Error=InvalidStream');
+        
+    db.Tag.remove(tag[0], function(err) {
+        if (err)
+            return res.send(500, 'Error=Unknown');
+            
+        res.send('OK');
+    });
 });
