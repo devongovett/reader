@@ -8,4 +8,9 @@ var Tag = mongoose.Schema({
     sortID: Number
 });
 
+Tag.virtual('stringID').get(function() {
+    var userID = this.user._id || this.user;
+    return 'user/' + userID + '/' + this.type + '/' + this.name;
+});
+
 module.exports = mongoose.model('Tag', Tag);

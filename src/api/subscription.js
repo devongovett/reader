@@ -196,7 +196,7 @@ app.get('/reader/api/0/subscription/list', function(req, res) {
             var categories = subscription.tags.map(function(tag) {
                 // TODO: check whether this only includes tags of type 'label'
                 return {
-                    id: 'user/' + user.id + '/' + tag.type + '/' + tag.name,
+                    id: tag.stringID,
                     label: tag.name
                 };
             });
