@@ -242,6 +242,32 @@ QUnit.asyncTest('unsubscribe unknown', function() {
     });
 });
 
+QUnit.asyncTest('quickadd', function() {
+    nock(host)
+        .get('/feed3.xml')
+        .replyWithFile(200, tests + '/old.xml');
+    
+    request.post(API + '/subscription/quickadd', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.equal(body, 'OK');
+        QUnit.start();
+    }).form({ 
+        quickadd: 'feed/http://example.com/feed3.xml',
+        T: token
+    });
+});
+
+QUnit.asyncTest('quickadd invalid', function() {
+    request.post(API + '/subscription/quickadd', function(err, res, body) {
+        assert.equal(res.statusCode, 400);
+        assert.equal(body, 'Error=InvalidStream');
+        QUnit.start();
+    }).form({ 
+        quickadd: 'feed/invalid',
+        T: token
+    });
+});
+
 QUnit.asyncTest('subscription list', function() {
     request(API + '/subscription/list', function(err, res, body) {
         assert.equal(res.statusCode, 200);
@@ -289,6 +315,12 @@ QUnit.asyncTest('subscription list', function() {
                     id: 'user/' + userId + '/label/bar',
                     label: 'bar'
                 }]
+            }, {
+                id: 'feed/http://example.com/feed3.xml',
+                title: 'Test Blog',
+                firstitemmsec: 0,
+                sortid: 0,
+                categories: []
             }]
         });
         

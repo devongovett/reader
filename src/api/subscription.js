@@ -164,6 +164,25 @@ app.post('/reader/api/0/subscription/edit', function(req, res) {
     });
 });
 
+app.post('/reader/api/0/subscription/quickadd', function(req, res) {
+    if (!utils.checkAuth(req, res, true))
+        return;
+        
+    var streams = utils.parseStreams(req.body.quickadd);
+    if (!streams)
+        return res.send(400, 'Error=InvalidStream');
+        
+    async.series([
+        actions.subscribe.bind(null, req, streams[0]),
+        req.user.save.bind(req.user)
+    ], function(err) {
+        if (err)
+            return res.send(500, 'Error=Unknown');
+        
+        res.send('OK');
+    });
+});
+
 // lists all of the feeds a user is subscribed to
 app.get('/reader/api/0/subscription/list', function(req, res) {
     if (!utils.checkAuth(req, res))
