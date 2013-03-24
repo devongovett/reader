@@ -83,25 +83,27 @@ QUnit.asyncTest('subscribe invalid tags', function() {
 
 // probably should be in a separate test module
 QUnit.test('parseTags', function() {
-    assert.equal(utils.parseTags(null, 'id'), null);
-    assert.equal(utils.parseTags('invalid', 'id'), null);
-    assert.deepEqual(utils.parseTags('user/id/label/test', 'id'), [
-        { type: 'label', name: 'test' }
+    var user = { id: 'id' };
+    
+    assert.equal(utils.parseTags(null, user), null);
+    assert.equal(utils.parseTags('invalid', user), null);
+    assert.deepEqual(utils.parseTags('user/id/label/test', user), [
+        { type: 'label', name: 'test', user: user }
     ]);
     
     // google reader also allows the shared.userID to be replaced with a -
-    assert.deepEqual(utils.parseTags('user/-/label/test', 'id'), [
-        { type: 'label', name: 'test' }
+    assert.deepEqual(utils.parseTags('user/-/label/test', user), [
+        { type: 'label', name: 'test', user: user }
     ]);
     
-    assert.deepEqual(utils.parseTags(['user/id/label/test', 'user/id/state/com.google/read'], 'id'), [
-        { type: 'label', name: 'test' },
-        { type: 'state', name: 'com.google/read' }
+    assert.deepEqual(utils.parseTags(['user/id/label/test', 'user/id/state/com.google/read'], user), [
+        { type: 'label', name: 'test', user: user },
+        { type: 'state', name: 'com.google/read', user: user }
     ]);
     
-    assert.equal(utils.parseTags(['user/id/label/test', null], 'id'), null);
-    assert.equal(utils.parseTags(['user/id/label/test', 1], 'id'), null);
-    assert.equal(utils.parseTags(['user/id/label/test', 'invalid'], 'id'), null);
+    assert.equal(utils.parseTags(['user/id/label/test', null], user), null);
+    assert.equal(utils.parseTags(['user/id/label/test', 1], user), null);
+    assert.equal(utils.parseTags(['user/id/label/test', 'invalid'], user), null);
 });
 
 QUnit.asyncTest('invalid action', function() {

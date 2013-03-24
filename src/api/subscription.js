@@ -24,7 +24,6 @@ function findSubscription(subscriptions, feed) {
 function editTags(ctx, subscription, callback) {
     async.parallel([
         async.each.bind(null, ctx.addTags || [], function(tag, next) {
-            tag.user = ctx.user._id;
             utils.findOrCreate(db.Tag, tag, function(err, tag) {
                 subscription.tags.addToSet(tag);
                 next(err);
@@ -32,7 +31,6 @@ function editTags(ctx, subscription, callback) {
         }),
         
         async.each.bind(null, ctx.removeTags || [], function(tag, next) {
-            tag.user = ctx.user._id;
             db.Tag.findOne(tag, function(err, tag) {
                 subscription.tags.remove(tag);
                 next(err);
@@ -132,8 +130,8 @@ app.post('/reader/api/0/subscription/edit', function(req, res) {
     // create a context used by the action functions (above)
     var ctx = {
         user: req.user,
-        addTags: utils.parseTags(req.body.a, req.user.id),
-        removeTags: utils.parseTags(req.body.r, req.user.id),
+        addTags: utils.parseTags(req.body.a, req.user),
+        removeTags: utils.parseTags(req.body.r, req.user),
         title: req.body.t
     };
         
