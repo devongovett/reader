@@ -66,6 +66,34 @@ exports.checkAuth = function(req, res, checkToken) {
     return ret;
 };
 
+var Validator = require('validator').Validator;
+
+// prevent validator from throwing errors, and instead return false on error
+// FIXME: there has to be a better way to do this
+var validator = new Validator;
+validator.error = function() { return false; }
+
+exports.parseStreams = function(streams) {
+    if (!streams)
+        return null;
+        
+    if (!Array.isArray(streams))
+        streams = [streams];
+        
+    for (var i = 0; i < streams.length; i++) {
+        if (!/^feed\//.test(streams[i]))
+            return null;
+            
+        var url = streams[i].slice(5);
+        if (!validator.check(url).isUrl())
+            return null;
+            
+        streams[i] = url;
+    }
+    
+    return streams;
+};
+
 exports.parseTags = function(tags, user) {
     if (!tags)
         return null;

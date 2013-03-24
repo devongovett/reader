@@ -1,5 +1,5 @@
 var express = require('express'),
-    Validator = require('validator').Validator,
+    async = require('async'),
     db = require('../db'),
     utils = require('../utils'),
     kue = require('kue'),
@@ -7,13 +7,11 @@ var express = require('express'),
     
 var app = module.exports = express();
 
-// prevent validator from throwing errors, and instead return false on error
-// FIXME: there has to be a better way to do this
-var validator = new Validator;
-validator.error = function() { return false; }
-
 // Helper function to find a subscription in an array based on a feed
 function findSubscription(subscriptions, feed) {
+    if (!feed || !subscriptions)
+        return null;
+    
     for (var i = 0; i < subscriptions.length; i++) {
         if (String(subscriptions[i].feed) === feed.id)
             return subscriptions[i];
@@ -22,80 +20,147 @@ function findSubscription(subscriptions, feed) {
     return null;
 }
 
+// Adds and removes tags from a subscription
+function editTags(ctx, subscription, callback) {
+    async.parallel([
+        async.each.bind(null, ctx.addTags || [], function(tag, next) {
+            tag.user = ctx.user._id;
+            utils.findOrCreate(db.Tag, tag, function(err, tag) {
+                subscription.tags.addToSet(tag);
+                next(err);
+            });
+        }),
+        
+        async.each.bind(null, ctx.removeTags || [], function(tag, next) {
+            tag.user = ctx.user._id;
+            db.Tag.findOne(tag, function(err, tag) {
+                subscription.tags.remove(tag);
+                next(err);
+            });
+        })
+    ], callback);
+}
+
+// Handlers for the subscription/edit actions
+var actions = {
+    subscribe: function(ctx, url, callback) {    
+        // Find or create feed for this URL
+        utils.findOrCreate(db.Feed, { feedURL: url }, function(err, feed) {
+            if (err)
+                return callback(err);
+            
+            // If this feed was just added, start a high priority job to fetch it
+            if (feed.numSubscribers === 0) {
+                jobs.create('feed', { feedID: feed.id })
+                    .priority('high')
+                    .save()
+            }
+            
+            // Find or add a Subscription for the feed
+            var subscription = findSubscription(ctx.user.subscriptions, feed);
+        
+            if (!subscription) {
+                subscription = new db.Subscription({ feed: feed });
+                ctx.user.subscriptions.push(subscription);
+            
+                // Increment feed.numSubscribers if a subscription is added
+                feed.numSubscribers++;
+            }
+        
+            // Add/remove tags and update title
+            if (ctx.title)
+                subscription.title = ctx.title;
+            
+            async.parallel([
+                editTags.bind(null, ctx, subscription),
+                feed.save.bind(feed)
+            ], callback);
+        });
+    },
+
+    unsubscribe: function(ctx, url, callback) {
+        // Find a feed for this URL
+        db.Feed.findOne({ feedURL: url }, function(err, feed) {
+            if (err)
+                return callback(err);
+            
+            var subscription = findSubscription(ctx.user.subscriptions, feed);
+            if (!subscription)
+                return callback();
+        
+            // Delete Subscription for this feed
+            subscription.remove();
+            feed.numSubscribers--;
+        
+            // If feed.numSubscribers is 0, delete feed
+            if (feed.numSubscribers === 0)
+                feed.remove(callback);
+            else
+                feed.save(callback);
+        });
+    },
+    
+    edit: function(ctx, url, callback) {
+        // Find a feed for this URL
+        db.Feed.findOne({ feedURL: url }, function(err, feed) {
+            if (err)
+                return callback(err);
+            
+            // Find Subscription for this URL
+            var subscription = findSubscription(ctx.user.subscriptions, feed);
+            if (!subscription)
+                return callback();
+            
+            // Update subscription.title if needed
+            if (ctx.title)
+                subscription.title = ctx.title;
+                
+            // Add/remove tags from subscription
+            editTags(ctx, subscription, callback);
+        });
+    }
+};
+
 app.post('/reader/api/0/subscription/edit', function(req, res) {
     if (!utils.checkAuth(req, res, true))
         return;
         
-    var url = /^feed\//.test(req.body.s) && req.body.s.slice(5);
-    if (!validator.check(url).isUrl())
+    if (!actions.hasOwnProperty(req.body.ac))
+        return res.send(400, 'Error=UnknownAction');
+        
+    // create a context used by the action functions (above)
+    var ctx = {
+        user: req.user,
+        addTags: utils.parseTags(req.body.a, req.user.id),
+        removeTags: utils.parseTags(req.body.r, req.user.id),
+        title: req.body.t
+    };
+        
+    // validate tags
+    if (req.body.a && !ctx.addTags)
+        return res.send(400, 'Error=InvalidTag');
+        
+    if (req.body.r && !ctx.removeTags)
+        return res.send(400, 'Error=InvalidTag');
+        
+    // the `s` parameter can be repeated to edit multiple subscriptions simultaneously
+    var streams = utils.parseStreams(req.body.s);
+    if (!streams)
         return res.send(400, 'Error=InvalidStream');
         
-    var addTags = utils.parseTags(req.body.a, req.user.id);
-    if (req.body.a && !addTags)
-        return res.send(400, 'Error=InvalidTag');
+    // bind the action function to the context
+    var action = actions[req.body.ac].bind(null, ctx);
+    
+    // call the action function for each stream and then save the user
+    async.series([
+        async.each.bind(null, streams, action),
+        ctx.user.save.bind(ctx.user)
+    ], function(err) {
+        if (err)
+            return res.send(500, 'Error=Unknown');
         
-    var removeTags = utils.parseTags(req.body.r, req.user.id);
-    if (req.body.r && !removeTags)
-        return res.send(400, 'Error=InvalidTag');
-        
-    var user = req.user;
-    switch (req.body.ac) {
-        case 'subscribe':
-            // 1. Find or add a Feed for this URL
-            utils.findOrCreate(db.Feed, { feedURL: url }, function(err, feed) {
-                if (err)
-                    return res.send(500, 'Error=Unknown');
-                    
-                // If this feed was just added, start a high priority job to fetch it
-                if (feed.numSubscribers === 0) {
-                    jobs.create('feed', { feedID: feed.id })
-                        .priority('high')
-                        .save()
-                }
-                    
-                // 2. Find or add a Subscription for the feed
-                var subscription = findSubscription(user.subscriptions, feed);
-                
-                if (!subscription) {
-                    subscription = new db.Subscription({ feed: feed });
-                    user.subscriptions.push(subscription);
-                    
-                    // 3. Increment feed.numSubscribers if a subscription is added
-                    feed.numSubscribers++;
-                    feed.save();
-                }
-                
-                // 4. Add/remove tags and update title (see edit action)
-                if (req.body.t)
-                    subscription.title = req.body.t;
-                    
-                // TODO: tags
-                    
-                req.user.save(function(err) {
-                    if (err)
-                        return res.send(500, 'Error=Unknown');
-                    
-                    res.send('OK');
-                });
-            });
-            
-            break;
-        
-        case 'unsubscribe':
-            // 1. Find a Feed for this URL
-            // 2. Delete Subscription for this feed
-            // 3. Decrement feed.numSubscribers
-            // 4. If feed.numSubscribers is 0, delete feed
-        
-        case 'edit':
-            // 1. Find a Feed for this URL
-            // 2. Find Subscription for this URL
-            // 3. Update subscription.title if needed
-            // 4. Add/remove tags and add them to subscription
-        
-        default:
-            return res.send(400, 'Error=UnknownAction');
-    }
+        res.send('OK');
+    });
 });
 
 app.get('/reader/api/0/subscription/list', function(req, res) {
@@ -103,6 +168,9 @@ app.get('/reader/api/0/subscription/list', function(req, res) {
         return;
         
     req.user.populate('subscriptions.feed subscriptions.tags', function(err, user) {
+        if (err)
+            return res.send(500, 'Error=Unknown');
+        
         var subscriptions = user.subscriptions.map(function(subscription) {
             var categories = subscription.tags.map(function(tag) {
                 // TODO: check whether this only includes tags of type 'label'
@@ -116,7 +184,7 @@ app.get('/reader/api/0/subscription/list', function(req, res) {
                 id: 'feed/' + subscription.feed.feedURL,
                 title: subscription.title || subscription.feed.title || '(title unknown)',
                 firstitemmsec: 0, // TODO
-                sortid: 0,
+                sortid: subscription.sortID || 0,
                 categories: categories
             };
         });

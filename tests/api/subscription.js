@@ -150,23 +150,145 @@ QUnit.asyncTest('subscribe', function() {
     });
 });
 
-QUnit.asyncTest('subscription list', function() {
+QUnit.asyncTest('subscribe multiple', function() {
     nock(host)
-        .get(path)
-        .replyWithFile(200, tests + '/old.xml');
+        .get('/feed1.xml')
+        .replyWithFile(200, tests + '/add_post.xml');
+        
+    nock(host)
+        .get('/feed2.xml')
+        .replyWithFile(200, tests + '/update_post.xml');
     
+    nock(host)
+        .get('/feed3.xml')
+        .replyWithFile(200, tests + '/update_meta.xml');
+    
+    request.post(API + '/subscription/edit', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.equal(body, 'OK');
+        QUnit.start();
+    }).form({ 
+        s: [
+            'feed/http://example.com/feed1.xml',
+            'feed/http://example.com/feed2.xml',
+            'feed/http://example.com/feed3.xml'
+        ],
+        ac: 'subscribe',
+        T: token
+    });
+});
+
+QUnit.asyncTest('add tags', function() {
+    request.post(API + '/subscription/edit', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.equal(body, 'OK');
+        QUnit.start();
+    }).form({ 
+        s: 'feed/' + url,
+        ac: 'edit',
+        T: token,
+        a: ['user/-/label/test', 'user/-/label/foo', 'user/-/label/bar', 'user/-/label/baz']
+    });
+});
+
+QUnit.asyncTest('remove tags', function() {
+    request.post(API + '/subscription/edit', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.equal(body, 'OK');
+        QUnit.start();
+    }).form({ 
+        s: 'feed/' + url,
+        ac: 'edit',
+        T: token,
+        r: ['user/-/label/bar', 'user/-/label/baz']
+    });
+});
+
+QUnit.asyncTest('edit multiple', function() {
+    request.post(API + '/subscription/edit', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.equal(body, 'OK');
+        QUnit.start();
+    }).form({ 
+        s: ['feed/http://example.com/feed1.xml', 'feed/http://example.com/feed2.xml'],
+        ac: 'edit',
+        T: token,
+        a: 'user/-/label/bar'
+    });
+});
+
+QUnit.asyncTest('unsubscribe', function() {
+    request.post(API + '/subscription/edit', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.equal(body, 'OK');
+        QUnit.start();
+    }).form({ 
+        s: 'feed/http://example.com/feed3.xml',
+        ac: 'unsubscribe',
+        T: token
+    });
+});
+
+
+QUnit.asyncTest('unsubscribe unknown', function() {
+    request.post(API + '/subscription/edit', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.equal(body, 'OK');
+        QUnit.start();
+    }).form({ 
+        s: 'feed/http://foobar.com/',
+        ac: 'unsubscribe',
+        T: token
+    });
+});
+
+QUnit.asyncTest('subscription list', function() {
     request(API + '/subscription/list', function(err, res, body) {
         assert.equal(res.statusCode, 200);
         assert.ok(/json/.test(res.headers['content-type']));
         
         body = JSON.parse(body);
+        
+        // the results can come back in different orders, so sort them
+        body.subscriptions.sort(function(a, b) {
+            return a.id <= b.id ? -1 : 1;
+        }).forEach(function(sub) {
+            sub.categories.sort(function(a, b) {
+                return a.label <= b.label ? -1 : 1;
+            });
+        });
+        
         assert.deepEqual(body, {
             subscriptions: [{
                 id: 'feed/http://example.com/feed.xml',
                 title: 'Test Blog',
                 firstitemmsec: 0,
                 sortid: 0,
-                categories: []
+                categories: [{
+                    id: 'user/' + userId + '/label/foo',
+                    label: 'foo'
+                }, {
+                    id: 'user/' + userId + '/label/test',
+                    label: 'test'
+                }]
+            }, {
+                id: 'feed/http://example.com/feed1.xml',
+                title: 'Test Blog',
+                firstitemmsec: 0,
+                sortid: 0,
+                categories: [{
+                    id: 'user/' + userId + '/label/bar',
+                    label: 'bar'
+                }]
+            }, {
+                id: 'feed/http://example.com/feed2.xml',
+                title: 'Test Blog',
+                firstitemmsec: 0,
+                sortid: 0,
+                categories: [{
+                    id: 'user/' + userId + '/label/bar',
+                    label: 'bar'
+                }]
             }]
         });
         
