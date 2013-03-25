@@ -30,7 +30,21 @@ app.post('/reader/api/0/edit-tag', function(req, res) {
     if (!utils.checkAuth(req, res, true))
         return;
         
+    var items = utils.parseItems(req.body.i);
+    if (!items)
+        return res.send(400, 'Error=InvalidItem');
         
+    var streams = utils.parseStreams(req.body.s);
+    if (req.body.s && !streams)
+        return res.send(400, 'Error=InvalidStream');
+    
+    if (streams.length !== items.length)
+        return res.send(400, 'Error=UnknownCount');
+        
+    var addTags = utils.parseTags(req.body.a, req.user);
+    var removeTags = utils.parseTags(req.body.r, req.user);
+    
+    return res.send('OK');
 });
 
 app.post('/reader/api/0/rename-tag', function(req, res) {

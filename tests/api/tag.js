@@ -21,7 +21,7 @@ QUnit.asyncTest('rename tag', function() {
 QUnit.asyncTest('delete tag', function() {
     request.post(shared.api + '/disable-tag', function(err, res, body) {
         assert.equal(res.statusCode, 200);
-        assert.equal(body, 'OK');        
+        assert.equal(body, 'OK');
         QUnit.start();
     }).form({
         T: shared.token,
@@ -49,6 +49,62 @@ QUnit.test('parseItems', function() {
     assert.deepEqual(utils.parseItems(['024025978b5e50d2', null]), null);
     assert.deepEqual(utils.parseItems('0458y'), null);
     assert.deepEqual(utils.parseItems('12-2'), null);
+});
+
+QUnit.asyncTest('edit tag invalid item', function() {
+    request.post(shared.api + '/edit-tag', function(err, res, body) {
+        assert.equal(res.statusCode, 400);
+        assert.equal(body, 'Error=InvalidItem');
+        QUnit.start();
+    }).form({
+        T: shared.token,
+        i: 'invalid',
+        s: 'feed/http://www.engadget.com/rss.xml',
+        a: 'user/-/label/folder1',
+        r: 'user/-/state/com.google/starred'
+    });
+});
+
+QUnit.asyncTest('edit tag invalid stream', function() {
+    request.post(shared.api + '/edit-tag', function(err, res, body) {
+        assert.equal(res.statusCode, 400);
+        assert.equal(body, 'Error=InvalidStream');
+        QUnit.start();
+    }).form({
+        T: shared.token,
+        i: '1386864356855952360',
+        s: 'feed/invalid',
+        a: 'user/-/label/folder1',
+        r: 'user/-/state/com.google/starred'
+    });
+});
+
+QUnit.asyncTest('edit tag unknown count', function() {
+    request.post(shared.api + '/edit-tag', function(err, res, body) {
+        assert.equal(res.statusCode, 400);
+        assert.equal(body, 'Error=UnknownCount');
+        QUnit.start();
+    }).form({
+        T: shared.token,
+        i: ['1386864356855952360', 'tag:google.com,2005:reader/item/fb115bd6d34a8e9f'],
+        s: 'feed/http://www.engadget.com/rss.xml',
+        a: 'user/-/label/folder1',
+        r: 'user/-/state/com.google/starred'
+    });
+});
+
+QUnit.asyncTest('edit tag', function() {
+    request.post(shared.api + '/edit-tag', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.equal(body, 'OK');
+        QUnit.start();
+    }).form({
+        T: shared.token,
+        i: 'tag:google.com,2005:reader/item/fb115bd6d34a8e9f',
+        s: 'feed/http://www.engadget.com/rss.xml',
+        a: 'user/-/label/folder1',
+        r: 'user/-/state/com.google/starred'
+    });
 });
 
 QUnit.asyncTest('list tags unauthenticated', function() {
