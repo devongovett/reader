@@ -94,16 +94,17 @@ QUnit.asyncTest('edit tag unknown count', function() {
 });
 
 QUnit.asyncTest('edit tag', function() {
-    request.post(shared.api + '/edit-tag', function(err, res, body) {
-        assert.equal(res.statusCode, 200);
-        assert.equal(body, 'OK');
-        QUnit.start();
-    }).form({
-        T: shared.token,
-        i: 'tag:google.com,2005:reader/item/fb115bd6d34a8e9f',
-        s: 'feed/http://www.engadget.com/rss.xml',
-        a: 'user/-/label/folder1',
-        r: 'user/-/state/com.google/starred'
+    require('../../src/db').Post.find(function(err, posts) {
+        request.post(shared.api + '/edit-tag', function(err, res, body) {
+            assert.equal(res.statusCode, 200);
+            assert.equal(body, 'OK');
+            QUnit.start();
+        }).form({
+            T: shared.token,
+            i: 'tag:google.com,2005:reader/item/' + posts[0].id,
+            a: 'user/-/label/folder1',
+            r: 'user/-/state/com.google/starred'
+        });
     });
 });
 
@@ -131,6 +132,7 @@ QUnit.asyncTest('list tags', function() {
         assert.deepEqual(body, {
             tags: [
                 { id: 'user/' + shared.userID + '/label/baz',  sortID: 0 },
+                { id: 'user/' + shared.userID + '/label/folder1', sortID: 0 },
                 { id: 'user/' + shared.userID + '/label/foo',  sortID: 0 },
                 { id: 'user/' + shared.userID + '/label/test', sortID: 0 }
             ]

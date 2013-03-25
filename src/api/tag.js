@@ -38,13 +38,26 @@ app.post('/reader/api/0/edit-tag', function(req, res) {
     if (req.body.s && !streams)
         return res.send(400, 'Error=InvalidStream');
     
-    if (streams.length !== items.length)
+    if (streams && streams.length !== items.length)
         return res.send(400, 'Error=UnknownCount');
         
     var addTags = utils.parseTags(req.body.a, req.user);
     var removeTags = utils.parseTags(req.body.r, req.user);
     
-    return res.send('OK');
+    // TODO: use streams to filter
+    db.Post.where('_id').in(items).exec(function(err, posts) {
+        if (err)
+            return res.send(500, 'Error=Unknown');
+            
+        async.each(posts, function(post, next) {
+            db.editTags(post, addTags, removeTags, next);
+        }, function(err) {
+            if (err)
+                return res.send(500, 'Error=Unknown');
+                
+            res.send('OK');
+        });
+    });
 });
 
 app.post('/reader/api/0/rename-tag', function(req, res) {
