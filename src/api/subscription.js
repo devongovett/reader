@@ -20,30 +20,11 @@ function findSubscription(subscriptions, feed) {
     return null;
 }
 
-// Adds and removes tags from a subscription
-function editTags(ctx, subscription, callback) {
-    async.parallel([
-        async.each.bind(null, ctx.addTags || [], function(tag, next) {
-            utils.findOrCreate(db.Tag, tag, function(err, tag) {
-                subscription.tags.addToSet(tag);
-                next(err);
-            });
-        }),
-        
-        async.each.bind(null, ctx.removeTags || [], function(tag, next) {
-            db.Tag.findOne(tag, function(err, tag) {
-                subscription.tags.remove(tag);
-                next(err);
-            });
-        })
-    ], callback);
-}
-
 // Handlers for the subscription/edit actions
 var actions = {
     subscribe: function(ctx, url, callback) {    
         // Find or create feed for this URL
-        utils.findOrCreate(db.Feed, { feedURL: url }, function(err, feed) {
+        db.findOrCreate(db.Feed, { feedURL: url }, function(err, feed) {
             if (err)
                 return callback(err);
             
@@ -70,7 +51,7 @@ var actions = {
                 subscription.title = ctx.title;
             
             async.parallel([
-                editTags.bind(null, ctx, subscription),
+                db.editTags.bind(null, subscription, ctx.addTags, ctx.removeTags),
                 feed.save.bind(feed)
             ], callback);
         });
@@ -114,7 +95,7 @@ var actions = {
                 subscription.title = ctx.title;
                 
             // Add/remove tags from subscription
-            editTags(ctx, subscription, callback);
+            db.editTags(subscription, ctx.addTags, ctx.removeTags, callback);
         });
     }
 };
