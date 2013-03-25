@@ -20,6 +20,7 @@
       "qunit-cli": "*",
       "request": "2.x",
       "libxmljs": "0.7.x",
+      "bignum": "0.5.x",
       "feedparser": "0.13.x",
       "kue": "0.6.x",
       "async": "0.2.x",

@@ -1,5 +1,6 @@
 var mongoose = require('mongoose'),
-    xml = require('libxmljs');
+    xml = require('libxmljs'),
+    bignum = require('bignum');
 
 exports.ref = function(type) {
     return {
@@ -116,6 +117,42 @@ exports.parseTags = function(tags, user) {
     }
     
     return tags;
+};
+
+exports.parseItems = function(items) {
+    if (!items)
+        return null;
+        
+    if (!Array.isArray(items))
+        items = [items];
+        
+    for (var i = 0; i < items.length; i++) {
+        // the short version is just a base-10 number
+        if (/^-?[0-9]+$/.test(items[i])) {
+            // use a bignum to convert the number to hex
+            var num = bignum(items[i]);
+            
+            // if a negative value was given, we need to get an unsigned version
+            if (num.lt(0)) {
+                var buf = num.abs().toBuffer();
+                for (var j = 0; j < buf.length; j++)
+                    buf[j] = 0xff - buf[j];
+                
+                num = bignum.fromBuffer(buf).add(1);
+            }
+            
+            items[i] = num.toString(16);
+        } else {
+            // the long version has a prefix and the id in hex
+            var match = /^tag:google.com,2005:reader\/item\/([0-9a-f]+)$/.exec(items[i]);
+            if (!match)
+                return null;
+            
+            items[i] = match[1];
+        }
+    }
+    
+    return items;
 };
 
 exports.findOrCreate = function(model, item, callback) {

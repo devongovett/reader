@@ -1,6 +1,7 @@
 var QUnit = require('qunit-cli'),
     assert = QUnit.assert,
     request = require('request'),
+    utils = require('../../src/utils'),
     shared = require('../shared');
     
 QUnit.module('Tag');
@@ -20,12 +21,34 @@ QUnit.asyncTest('rename tag', function() {
 QUnit.asyncTest('delete tag', function() {
     request.post(shared.api + '/disable-tag', function(err, res, body) {
         assert.equal(res.statusCode, 200);
-        assert.equal(body, 'OK');
+        assert.equal(body, 'OK');        
         QUnit.start();
     }).form({
         T: shared.token,
         s: 'user/-/label/updated'
     });
+});
+
+QUnit.test('parseItems', function() {
+    assert.deepEqual(utils.parseItems('6705009029382226760'), ['5d0cfa30041d4348']);
+    assert.deepEqual(utils.parseItems('162170919393841362'), ['024025978b5e50d2']);
+    assert.deepEqual(utils.parseItems('-355401917359550817'), ['fb115bd6d34a8e9f']);
+    assert.deepEqual(
+        utils.parseItems(['162170919393841362', '-355401917359550817']), 
+        ['024025978b5e50d2', 'fb115bd6d34a8e9f']
+    );
+    
+    assert.deepEqual(utils.parseItems('tag:google.com,2005:reader/item/5d0cfa30041d4348'), ['5d0cfa30041d4348']);
+    assert.deepEqual(utils.parseItems([
+        'tag:google.com,2005:reader/item/024025978b5e50d2',
+        'tag:google.com,2005:reader/item/fb115bd6d34a8e9f'
+    ]), ['024025978b5e50d2', 'fb115bd6d34a8e9f']);
+    
+    assert.deepEqual(utils.parseItems(null), null);
+    assert.deepEqual(utils.parseItems('dfjgdf'), null);
+    assert.deepEqual(utils.parseItems(['024025978b5e50d2', null]), null);
+    assert.deepEqual(utils.parseItems('0458y'), null);
+    assert.deepEqual(utils.parseItems('12-2'), null);
 });
 
 QUnit.asyncTest('list tags unauthenticated', function() {
