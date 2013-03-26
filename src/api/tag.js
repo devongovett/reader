@@ -50,7 +50,12 @@ app.post('/reader/api/0/edit-tag', function(req, res) {
             return res.send(500, 'Error=Unknown');
             
         async.each(posts, function(post, next) {
-            db.editTags(post, addTags, removeTags, next);
+            db.editTags(post, addTags, removeTags, function(err) {
+                if (err)
+                    return next(err);
+                    
+                post.save(next);
+            });
         }, function(err) {
             if (err)
                 return res.send(500, 'Error=Unknown');
@@ -109,5 +114,40 @@ app.post('/reader/api/0/disable-tag', function(req, res) {
         } else {
             res.send('OK');
         }
+    });
+});
+
+app.post('/reader/api/0/mark-all-as-read', function(req, res) {
+    if (!utils.checkAuth(req, res, true))
+        return;
+        
+    var streams = utils.parseStreams(req.body.s, req.user);
+    if (!streams)
+        return res.send(400, 'Error=InvalidStream');
+    
+    // Find or create the read state tag
+    var tag = utils.parseTags('user/-/state/com.google/read', req.user)[0];
+    
+    db.findOrCreate(db.Tag, tag, function(err, tag) {
+        if (err)
+            return res.send(500, 'Error=Unknown');
+        
+        // Get all of the posts in the stream
+        // Google Reader appears to only accept a single stream
+        db.postsForStream(streams[0], function(err, posts) {
+            if (err)
+                return res.send(500, 'Error=Unknown');
+            
+            // Add the tag to each of them
+            async.each(posts, function(post, next) {
+                post.tags.addToSet(tag);
+                post.save(next);
+            }, function(err) {
+                if (err)
+                    return res.send(500, 'Error=Unknown');
+    
+                res.send('OK');
+            });            
+        });
     });
 });

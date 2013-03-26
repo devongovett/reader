@@ -69,3 +69,30 @@ exports.editTags = function(record, addTags, removeTags, callback) {
         })
     ], callback);
 };
+
+// gets the Posts for a stream descriptor as parsed by utils.parseStreams
+exports.postsForStream = function(stream, callback) {
+    switch (stream.type) {
+        case 'feed':
+            exports.Feed.findOne({ feedURL: stream.value })
+              .populate('posts')
+              .exec(function(err, feed) {
+                  callback(null, feed.posts);
+              });
+              
+            break;
+            
+        case 'tag':
+            exports.Tag.findOne(stream.value, function(err, tag) {
+                if (err)
+                    return callback(err);
+                    
+                exports.Post.find({ tags: tag }, callback);
+            });
+            
+            break;
+        
+        default:
+            callback('InvalidStream');
+    }
+};

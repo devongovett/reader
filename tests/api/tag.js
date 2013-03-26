@@ -86,6 +86,28 @@ QUnit.asyncTest('edit tag', function() {
     });
 });
 
+QUnit.asyncTest('mark all as read feed', function() {
+    request.post(shared.api + '/mark-all-as-read', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.equal(body, 'OK');
+        QUnit.start();
+    }).form({
+        T: shared.token,
+        s: 'feed/http://example.com/feed1.xml'
+    });
+});
+
+QUnit.asyncTest('mark all as read tag', function() {
+    request.post(shared.api + '/mark-all-as-read', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.equal(body, 'OK');
+        QUnit.start();
+    }).form({
+        T: shared.token,
+        s: 'user/-/label/folder1'
+    });
+});
+
 QUnit.asyncTest('list tags unauthenticated', function() {
     request(shared.api + '/tag/list', { jar: false }, function(err, res, body) {
         assert.equal(res.statusCode, 401);
@@ -112,7 +134,8 @@ QUnit.asyncTest('list tags', function() {
                 { id: 'user/' + shared.userID + '/label/baz',  sortID: 0 },
                 { id: 'user/' + shared.userID + '/label/folder1', sortID: 0 },
                 { id: 'user/' + shared.userID + '/label/foo',  sortID: 0 },
-                { id: 'user/' + shared.userID + '/label/test', sortID: 0 }
+                { id: 'user/' + shared.userID + '/label/test', sortID: 0 },
+                { id: 'user/' + shared.userID + '/state/com.google/read', sortID: 0 }
             ]
         });
     
