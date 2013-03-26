@@ -119,6 +119,36 @@ exports.parseTags = function(tags, user) {
     return tags;
 };
 
+exports.parseStreams = function(streams, user) {
+    if (!streams)
+        return null;
+        
+    if (!Array.isArray(streams))
+        streams = [streams];
+        
+    for (var i = 0; i < streams.length; i++) {
+        var urls = exports.parseFeeds(streams[i])
+        
+        if (urls) {
+            streams[i] = {
+                type: 'feed',
+                value: urls[0]
+            };
+        } else {
+            var tags = exports.parseTags(streams[i], user);
+            if (!tags)
+                return null;
+                
+            streams[i] = {
+                type: 'tag',
+                value: tags[0]
+            }
+        }
+    }
+    
+    return streams;
+};
+
 exports.parseItems = function(items) {
     if (!items)
         return null;

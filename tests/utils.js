@@ -4,9 +4,8 @@ var QUnit = require('qunit-cli'),
     
 QUnit.module('Utils');
 
-QUnit.test('parse tags', function() {
-    var user = { id: 'id' };
-    
+var user = { id: 'id' };
+QUnit.test('parseTags', function() {
     assert.equal(utils.parseTags(null, user), null);
     assert.equal(utils.parseTags('invalid', user), null);
     assert.deepEqual(utils.parseTags('user/id/label/test', user), [
@@ -28,7 +27,7 @@ QUnit.test('parse tags', function() {
     assert.equal(utils.parseTags(['user/id/label/test', 'invalid'], user), null);
 });
 
-QUnit.test('parse feed', function() {
+QUnit.test('parseFeeds', function() {
     assert.equal(utils.parseFeeds(null), null);
     assert.equal(utils.parseFeeds('invalid'), null);
     assert.equal(utils.parseFeeds('feed/invalid'), null);
@@ -43,6 +42,27 @@ QUnit.test('parse feed', function() {
     ]), [
         'http://feeds.feedburner.com/WSwI',
         'http://example.com/rss.xml'
+    ]);
+});
+
+QUnit.test('parseStreams', function() {
+    assert.equal(utils.parseStreams(null), null);
+    assert.equal(utils.parseStreams('invalid'), null);
+    
+    assert.deepEqual(utils.parseStreams('user/id/label/test', user), [
+        { type: 'tag', value: { type: 'label', name: 'test', user: user }}
+    ]);
+    
+    assert.deepEqual(utils.parseStreams('feed/http://feeds.feedburner.com/WSwI'), [
+        { type: 'feed', value: 'http://feeds.feedburner.com/WSwI' }
+    ]);
+    
+    assert.deepEqual(utils.parseStreams([
+        'feed/http://feeds.feedburner.com/WSwI',
+        'user/-/label/test'
+    ], user), [
+        { type: 'feed', value: 'http://feeds.feedburner.com/WSwI' },
+        { type: 'tag', value: { type: 'label', name: 'test', user: user }}
     ]);
 });
 
