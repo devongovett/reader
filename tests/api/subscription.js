@@ -2,7 +2,6 @@ var QUnit = require('qunit-cli'),
     assert = QUnit.assert,
     request = require('request'),
     nock = require('nock'),
-    utils = require('../../src/utils'),
     shared = require('../shared');
 
 QUnit.module('Subscription');
@@ -79,31 +78,6 @@ QUnit.asyncTest('subscribe invalid tags', function() {
         T: shared.token,
         a: ['user/' + shared.userID +  '/label/test', 'invalid'] // a valid one, and an invalid one
     });
-});
-
-// probably should be in a separate test module
-QUnit.test('parseTags', function() {
-    var user = { id: 'id' };
-    
-    assert.equal(utils.parseTags(null, user), null);
-    assert.equal(utils.parseTags('invalid', user), null);
-    assert.deepEqual(utils.parseTags('user/id/label/test', user), [
-        { type: 'label', name: 'test', user: user }
-    ]);
-    
-    // google reader also allows the shared.userID to be replaced with a -
-    assert.deepEqual(utils.parseTags('user/-/label/test', user), [
-        { type: 'label', name: 'test', user: user }
-    ]);
-    
-    assert.deepEqual(utils.parseTags(['user/id/label/test', 'user/id/state/com.google/read'], user), [
-        { type: 'label', name: 'test', user: user },
-        { type: 'state', name: 'com.google/read', user: user }
-    ]);
-    
-    assert.equal(utils.parseTags(['user/id/label/test', null], user), null);
-    assert.equal(utils.parseTags(['user/id/label/test', 1], user), null);
-    assert.equal(utils.parseTags(['user/id/label/test', 'invalid'], user), null);
 });
 
 QUnit.asyncTest('invalid action', function() {

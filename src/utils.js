@@ -74,25 +74,25 @@ var Validator = require('validator').Validator;
 var validator = new Validator;
 validator.error = function() { return false; }
 
-exports.parseStreams = function(streams) {
-    if (!streams)
+exports.parseFeeds = function(feeds) {
+    if (!feeds)
         return null;
         
-    if (!Array.isArray(streams))
-        streams = [streams];
+    if (!Array.isArray(feeds))
+        feeds = [feeds];
         
-    for (var i = 0; i < streams.length; i++) {
-        if (!/^feed\//.test(streams[i]))
+    for (var i = 0; i < feeds.length; i++) {
+        if (!/^feed\//.test(feeds[i]))
             return null;
             
-        var url = streams[i].slice(5);
+        var url = feeds[i].slice(5);
         if (!validator.check(url).isUrl())
             return null;
             
-        streams[i] = url;
+        feeds[i] = url;
     }
     
-    return streams;
+    return feeds;
 };
 
 exports.parseTags = function(tags, user) {

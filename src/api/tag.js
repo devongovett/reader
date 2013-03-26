@@ -34,7 +34,7 @@ app.post('/reader/api/0/edit-tag', function(req, res) {
     if (!items)
         return res.send(400, 'Error=InvalidItem');
         
-    var streams = utils.parseStreams(req.body.s);
+    var streams = utils.parseFeeds(req.body.s);
     if (req.body.s && !streams)
         return res.send(400, 'Error=InvalidStream');
     

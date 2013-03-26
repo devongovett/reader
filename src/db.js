@@ -9,7 +9,11 @@ exports.Tag = require('./models/tag');
 exports.Subscription = require('./models/subscription');
 
 // connect to the database
+var connected = false;
 exports.connect = function(database) {
+    if (mongoose.connection.db)
+        return;
+    
     mongoose.connect('mongodb://localhost/' + (database || 'reader'));
     var db = mongoose.connection;
 

@@ -124,7 +124,7 @@ app.post('/reader/api/0/subscription/edit', function(req, res) {
         return res.send(400, 'Error=InvalidTag');
         
     // the `s` parameter can be repeated to edit multiple subscriptions simultaneously
-    var streams = utils.parseStreams(req.body.s);
+    var streams = utils.parseFeeds(req.body.s);
     if (!streams)
         return res.send(400, 'Error=InvalidStream');
         
@@ -147,7 +147,7 @@ app.post('/reader/api/0/subscription/quickadd', function(req, res) {
     if (!utils.checkAuth(req, res, true))
         return;
         
-    var streams = utils.parseStreams(req.body.quickadd);
+    var streams = utils.parseFeeds(req.body.quickadd);
     if (!streams)
         return res.send(400, 'Error=InvalidStream');
         
@@ -197,7 +197,7 @@ app.get('/reader/api/0/subscription/list', function(req, res) {
 
 // checks to see if a user is subscribed to a particular feed
 app.get('/reader/api/0/subscribed', function(req, res) {
-    var streams = utils.parseStreams(req.query.s);
+    var streams = utils.parseFeeds(req.query.s);
     if (!streams)
         return res.send(400, 'Error=InvalidStream');
         
