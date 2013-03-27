@@ -151,3 +151,15 @@ app.post('/reader/api/0/mark-all-as-read', function(req, res) {
         });
     });
 });
+
+app.get('/reader/api/0/unread-count', function(req, res) {
+    if (!utils.checkAuth(req, res))
+        return;
+    
+    req.user.populate('subscriptions.feed', function(err, user) {
+        if (err)
+            return res.send(500, 'Error=Unknown');
+            
+        // for each subscription, count the posts NOT containing the user/-/state/com.google/read tag
+    });
+});
