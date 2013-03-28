@@ -20,6 +20,10 @@ var Feed = mongoose.Schema({
     etag: String
 });
 
+Feed.virtual('stringID').get(function() {
+    return 'feed/' + this.feedURL;
+});
+
 Feed.pre('remove', function(callback) {
     var Post = mongoose.model('Post');
     Post.where('_id').in(this.posts).remove(callback);
