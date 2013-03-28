@@ -188,10 +188,17 @@ app.get('/reader/api/0/unread-count', function(req, res) {
                           });
                           
                           subscription.tags.forEach(function(tag) {
-                              if (!tags[tag.stringID])
-                                  tags[tag.stringID] = 0;
+                              if (!tags[tag.stringID]) {
+                                  tags[tag.stringID] = {
+                                      id: tag.stringID,
+                                      count: 0,
+                                      newestItemTimestampUsec: 0 // TODO
+                                  };
+                                  
+                                  ret.unreadcounts.push(tags[tag.stringID]);
+                              }
                                                                 
-                              tags[tag.stringID] += count;
+                              tags[tag.stringID].count += count;
                           });
                       }
                       
@@ -201,14 +208,6 @@ app.get('/reader/api/0/unread-count', function(req, res) {
             }, function(err) {
                 if (err)
                     return res.send(500, 'Error=Unknown');
-                    
-                for (var tag in tags) {
-                    ret.unreadcounts.push({
-                        id: tag,
-                        count: tags[tag],
-                        newestItemTimestampUsec: 0 // TODO
-                    });
-                }
                 
                 ret.unreadcounts.push({
                     id: 'user/' + req.user.id + '/state/com.google/reading-list',
