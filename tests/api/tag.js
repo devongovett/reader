@@ -142,3 +142,46 @@ QUnit.asyncTest('list tags', function() {
         QUnit.start();
     });
 });
+
+QUnit.asyncTest('unread count', function() {
+    request(shared.api + '/unread-count', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.ok(/json/.test(res.headers['content-type']));
+    
+        body = JSON.parse(body);        
+        body.unreadcounts.sort(function(a, b) {
+            return a.id <= b.id ? -1 : 1;
+        });
+        
+        assert.deepEqual(body, {
+            max: 1000,
+            unreadcounts: [{
+                id: 'feed/http://example.com/feed.xml',
+                count: 2,
+                newestItemTimestampUsec: 0
+            }, {
+                id: 'feed/http://example.com/feed2.xml',
+                count: 5,
+                newestItemTimestampUsec: 0
+            }, {
+                id: 'feed/http://example.com/feed3.xml',
+                count: 3,
+                newestItemTimestampUsec: 0
+            }, {
+                id: 'user/' + shared.userID + '/label/foo',
+                count: 2,
+                newestItemTimestampUsec: 0
+            }, {
+                id: 'user/' + shared.userID + '/label/test',
+                count: 2,
+                newestItemTimestampUsec: 0
+            }, {
+                id: 'user/' + shared.userID + '/state/com.google/reading-list',
+                count: 10,
+                newestItemTimestampUsec: 0
+            }]
+        });
+    
+        QUnit.start();
+    });
+});

@@ -19,7 +19,7 @@ app.get('/reader/api/0/tag/list', function(req, res) {
                 sortID: tag.sortID || 0 // TODO
             };
         });
-            
+        
         utils.respond(res, {
             tags: tags
         });
@@ -155,11 +155,69 @@ app.post('/reader/api/0/mark-all-as-read', function(req, res) {
 app.get('/reader/api/0/unread-count', function(req, res) {
     if (!utils.checkAuth(req, res))
         return;
-    
-    req.user.populate('subscriptions.feed', function(err, user) {
+        
+    var tag = utils.parseTags('user/-/state/com.google/read', req.user)[0];
+    db.Tag.findOne(tag, function(err, tag) {
         if (err)
             return res.send(500, 'Error=Unknown');
+        
+        req.user.populate('subscriptions.feed subscriptions.tags', function(err, user) {
+            if (err)
+                return res.send(500, 'Error=Unknown');
             
-        // for each subscription, count the posts NOT containing the user/-/state/com.google/read tag
+            var ret = {
+                max: 1000, // is there a way to change this?
+                unreadcounts: []
+            };
+            
+            var tags = {};
+            var total = 0;
+            
+            // for each subscription, count the posts NOT containing the user/-/state/com.google/read tag
+            async.each(user.subscriptions, function(subscription, next) {
+                db.Post
+                  .where('_id').in(subscription.feed.posts)
+                  .and({ tags: { $ne: tag }})
+                  .limit(1000)
+                  .count(function(err, count) {
+                      if (count > 0) {
+                          ret.unreadcounts.push({
+                              id: subscription.feed.stringID,
+                              count: count,
+                              newestItemTimestampUsec: 0 // TODO
+                          });
+                          
+                          subscription.tags.forEach(function(tag) {
+                              if (!tags[tag.stringID])
+                                  tags[tag.stringID] = 0;
+                                                                
+                              tags[tag.stringID] += count;
+                          });
+                      }
+                      
+                      total += count;
+                      next(err);
+                  });
+            }, function(err) {
+                if (err)
+                    return res.send(500, 'Error=Unknown');
+                    
+                for (var tag in tags) {
+                    ret.unreadcounts.push({
+                        id: tag,
+                        count: tags[tag],
+                        newestItemTimestampUsec: 0 // TODO
+                    });
+                }
+                
+                ret.unreadcounts.push({
+                    id: 'user/' + req.user.id + '/state/com.google/reading-list',
+                    count: total,
+                    newestItemTimestampUsec: 0 // TODO
+                });
+                    
+                utils.respond(res, ret);
+            });
+        });
     });
 });
