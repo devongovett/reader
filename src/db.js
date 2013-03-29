@@ -87,6 +87,7 @@ exports.postsForStream = function(stream, callback) {
                 if (err)
                     return callback(err);
                     
+                // TODO: get posts in subscriptions with this tag too
                 exports.Post.find({ tags: tag }, callback);
             });
             
