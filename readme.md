@@ -51,8 +51,9 @@ working on something, please mark it so we don't duplicate effort.
 
 1. [Install MongoDB](http://docs.mongodb.org/manual/installation/) if you haven't already.
 2. [Install Node.js](http://nodejs.org/) if you haven't already.
-3. Clone this repo using Git
-4. Run `npm install` to install the dependencies
+3. [Install Redis](http://redis.io/) if you haven't already.
+4. Clone this repo using Git
+5. Run `npm install` to install the dependencies
 
 Run the API server with:
 
