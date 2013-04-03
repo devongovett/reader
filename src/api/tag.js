@@ -95,8 +95,6 @@ app.post('/reader/api/0/disable-tag', function(req, res) {
                 db.Post.update({}, { $pull: { tags: tag }})
             ]);
         }
-        
-        return rsvp.defer().resolve();
     }).then(function() {
         res.send('OK');
     }, function(err) {
