@@ -1,7 +1,6 @@
 var mongoose = require('mongoose');
 
-// TODO: wrap mongoose methods so they return promises
-// then method that runs exec on the query
+// wrap mongoose methods so they return promises
 mongoose.Query.prototype.then = function(done, fail) {
     return this.exec().then(done, fail);
 };
