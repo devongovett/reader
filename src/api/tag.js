@@ -1,5 +1,5 @@
 var express = require('express'),
-    async = require('async'),
+    rsvp = require('rsvp'),
     db = require('../db'),
     utils = require('../utils');
     
@@ -9,10 +9,7 @@ app.get('/reader/api/0/tag/list', function(req, res) {
     if (!utils.checkAuth(req, res))
         return;
     
-    db.Tag.find({ user: req.user }, function(err, tags) {
-        if (err)
-            return res.send(500, 'Error=Unknown');
-            
+    db.Tag.find({ user: req.user }).then(function(tags) {
         tags = tags.map(function(tag) {
             return {
                 id: tag.stringID,
@@ -23,6 +20,8 @@ app.get('/reader/api/0/tag/list', function(req, res) {
         utils.respond(res, {
             tags: tags
         });
+    }, function(err) {
+        res.send(500, 'Error=Unknown');
     });
 });
 
@@ -45,23 +44,16 @@ app.post('/reader/api/0/edit-tag', function(req, res) {
     var removeTags = utils.parseTags(req.body.r, req.user);
     
     // TODO: use streams to filter
-    db.Post.where('_id').in(items).exec(function(err, posts) {
-        if (err)
-            return res.send(500, 'Error=Unknown');
-            
-        async.each(posts, function(post, next) {
-            db.editTags(post, addTags, removeTags, function(err) {
-                if (err)
-                    return next(err);
-                    
-                post.save(next);
+    db.Post.where('_id').in(items).then(function(posts) {
+        return rsvp.all(posts.map(function(post) {
+            return db.editTags(post, addTags, removeTags).then(function() {
+                return post.save();
             });
-        }, function(err) {
-            if (err)
-                return res.send(500, 'Error=Unknown');
-                
-            res.send('OK');
-        });
+        }));
+    }).then(function() {
+        res.send('OK');
+    }, function(err) {
+        res.send(500, 'Error=Unknown');
     });
 });
 
@@ -76,11 +68,10 @@ app.post('/reader/api/0/rename-tag', function(req, res) {
         return res.send(400, 'Error=InvalidStream');
         
     // TODO: if dest is another existing tag, the tags need to be merged
-    db.Tag.update(source[0], dest[0], function(err) {
-        if (err)
-            return res.send(500, 'Error=Unknown');
-            
+    db.Tag.update(source[0], dest[0]).then(function() {
         res.send('OK');
+    }, function(err) {
+        return res.send(500, 'Error=Unknown');
     });
 });
 
@@ -92,28 +83,24 @@ app.post('/reader/api/0/disable-tag', function(req, res) {
     if (!tag)
         return res.send(400, 'Error=InvalidStream');
         
-    db.Tag.findOneAndRemove(tag[0], function(err, tag) {
-        if (err)
-            return res.send(500, 'Error=Unknown');
-            
+    db.Tag.findOneAndRemove(tag[0]).then(function(tag) {            
         if (tag) {
             // remove references to this tag from subscriptions and posts
             req.user.subscriptions.forEach(function(sub) {
                 sub.tags.remove(tag);
             });
             
-            async.parallel([
-                req.user.save.bind(req.user),
-                db.Post.update.bind(db.Post, {}, { $pull: { tags: tag }})
-            ], function(err) {
-                if (err)
-                    return res.send(500, 'Error=Unknown');
-                
-                res.send('OK');
-            })
-        } else {
-            res.send('OK');
+            return rsvp.all([
+                req.user.save(),
+                db.Post.update({}, { $pull: { tags: tag }})
+            ]);
         }
+        
+        return rsvp.defer().resolve();
+    }).then(function() {
+        res.send('OK');
+    }, function(err) {
+        res.send(500, 'Error=Unknown');
     });
 });
 
@@ -128,27 +115,23 @@ app.post('/reader/api/0/mark-all-as-read', function(req, res) {
     // Find or create the read state tag
     var tag = utils.parseTags('user/-/state/com.google/read', req.user)[0];
     
-    db.findOrCreate(db.Tag, tag, function(err, tag) {
-        if (err)
-            return res.send(500, 'Error=Unknown');
-        
-        // Get all of the posts in the stream
-        // Google Reader appears to only accept a single stream
-        db.postsForStream(streams[0], function(err, posts) {
-            if (err)
-                return res.send(500, 'Error=Unknown');
-            
-            // Add the tag to each of them
-            async.each(posts, function(post, next) {
-                post.tags.addToSet(tag);
-                post.save(next);
-            }, function(err) {
-                if (err)
-                    return res.send(500, 'Error=Unknown');
+    // Get all of the posts in the stream
+    // Google Reader appears to only accept a single stream
+    var tag = db.findOrCreate(db.Tag, tag);
+    var posts = db.postsForStream(streams[0]);
     
-                res.send('OK');
-            });            
-        });
+    rsvp.all([tag, posts]).then(function(results) {
+        var tag = results[0], posts = results[1];
+        
+        // Add the tag to each of them
+        return rsvp.all(posts.map(function(post) {
+            post.tags.addToSet(tag);
+            return post.save();
+        }));
+    }).then(function() {
+        res.send('OK');
+    }, function(err) {
+        res.send(500, 'Error=Unknown');
     });
 });
 
@@ -157,66 +140,62 @@ app.get('/reader/api/0/unread-count', function(req, res) {
         return;
         
     var tag = utils.parseTags('user/-/state/com.google/read', req.user)[0];
-    db.Tag.findOne(tag, function(err, tag) {
-        if (err)
-            return res.send(500, 'Error=Unknown');
+    
+    var ret = {
+        max: 1000, // is there a way to change this?
+        unreadcounts: []
+    };
+
+    var tags = {};
+    var total = 0;
+    
+    rsvp.all([
+        db.Tag.findOne(tag),
+        req.user.populate('subscriptions.feed subscriptions.tags')
+    ]).then(function(results) {
+        var tag = results[0], user = results[1];
         
-        req.user.populate('subscriptions.feed subscriptions.tags', function(err, user) {
-            if (err)
-                return res.send(500, 'Error=Unknown');
-            
-            var ret = {
-                max: 1000, // is there a way to change this?
-                unreadcounts: []
-            };
-            
-            var tags = {};
-            var total = 0;
-            
-            // for each subscription, count the posts NOT containing the user/-/state/com.google/read tag
-            async.each(user.subscriptions, function(subscription, next) {
-                db.Post
-                  .where('_id').in(subscription.feed.posts)
-                  .and({ tags: { $ne: tag }})
-                  .limit(1000)
-                  .count(function(err, count) {
-                      if (count > 0) {
-                          ret.unreadcounts.push({
-                              id: subscription.feed.stringID,
-                              count: count,
+        return rsvp.all(user.subscriptions.map(function(subscription) {
+            return db.Post
+              .where('_id').in(subscription.feed.posts)
+              .and({ tags: { $ne: tag }})
+              .limit(1000)
+              .count()
+              .then(function(count) {
+                  if (count === 0) return;
+                  
+                  ret.unreadcounts.push({
+                      id: subscription.feed.stringID,
+                      count: count,
+                      newestItemTimestampUsec: 0 // TODO
+                  });
+                  
+                  subscription.tags.forEach(function(tag) {
+                      if (!tags[tag.stringID]) {
+                          tags[tag.stringID] = {
+                              id: tag.stringID,
+                              count: 0,
                               newestItemTimestampUsec: 0 // TODO
-                          });
+                          };
                           
-                          subscription.tags.forEach(function(tag) {
-                              if (!tags[tag.stringID]) {
-                                  tags[tag.stringID] = {
-                                      id: tag.stringID,
-                                      count: 0,
-                                      newestItemTimestampUsec: 0 // TODO
-                                  };
-                                  
-                                  ret.unreadcounts.push(tags[tag.stringID]);
-                              }
-                                                                
-                              tags[tag.stringID].count += count;
-                          });
+                          ret.unreadcounts.push(tags[tag.stringID]);
                       }
                       
-                      total += count;
-                      next(err);
+                      tags[tag.stringID].count += count;
                   });
-            }, function(err) {
-                if (err)
-                    return res.send(500, 'Error=Unknown');
-                
-                ret.unreadcounts.push({
-                    id: 'user/' + req.user.id + '/state/com.google/reading-list',
-                    count: total,
-                    newestItemTimestampUsec: 0 // TODO
-                });
-                    
-                utils.respond(res, ret);
-            });
+                  
+                  total += count;
+              });
+        }));
+    }).then(function() {
+        ret.unreadcounts.push({
+            id: 'user/' + req.user.id + '/state/com.google/reading-list',
+            count: total,
+            newestItemTimestampUsec: 0 // TODO
         });
+            
+        utils.respond(res, ret);
+    }, function(err) {
+        res.send(500, 'Error=Unknown');
     });
 });

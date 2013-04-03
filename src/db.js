@@ -1,5 +1,9 @@
 var mongoose = require('mongoose'),
+    rsvp = require('rsvp'),
+    Promise = rsvp.Promise,
     async = require('async');
+
+require('./mongoose-promise');
 
 // export the modules
 exports.Feed = require('./models/feed');
@@ -36,64 +40,52 @@ exports.dropDatabase = function(callback) {
     mongoose.connection.db.dropDatabase(callback);
 };
 
-exports.findOrCreate = function(model, item, callback) {
-    model.findOne(item, function(err, record) {
-        if (err) 
-            return callback(err);
+exports.findOrCreate = function(model, item) {
+    return model.findOne(item).then(function(record) {
+        if (!record)
+            return model.create(item);
             
-        if (!record) {
-            model.create(item, function(err, record) {
-                callback(err, record);
-            });
-        } else {
-            callback(null, record);
-        }
+        return record;
     });
 };
 
 // Adds and removes tags from a subscription or post
-exports.editTags = function(record, addTags, removeTags, callback) {
-    async.parallel([
-        async.each.bind(null, addTags || [], function(tag, next) {
-            exports.findOrCreate(exports.Tag, tag, function(err, tag) {
-                record.tags.addToSet(tag);
-                next(err);
-            });
-        }),
-        
-        async.each.bind(null, removeTags || [], function(tag, next) {
-            exports.Tag.findOne(tag, function(err, tag) {
-                record.tags.remove(tag);
-                next(err);
-            });
-        })
-    ], callback);
+exports.editTags = function(record, addTags, removeTags) {
+    addTags || (addTags = []);
+    removeTags || (removeTags = []);
+    
+    var add = addTags.map(function(tag) {
+        return exports.findOrCreate(exports.Tag, tag).then(function(tag) {
+            record.tags.addToSet(tag);
+        });
+    });
+    
+    var remove = removeTags.map(function(tag) {
+        return exports.Tag.findOne(tag).then(function(tag) {
+            record.tags.remove(tag);
+        });
+    });
+    
+    return rsvp.all(add.concat(remove));
 };
 
-// gets the Posts for a stream descriptor as parsed by utils.parseStreams
-exports.postsForStream = function(stream, callback) {
+// Gets the Posts for a stream descriptor as parsed by utils.parseStreams
+exports.postsForStream = function(stream) {
     switch (stream.type) {
         case 'feed':
-            exports.Feed.findOne({ feedURL: stream.value })
+            return exports.Feed.findOne({ feedURL: stream.value })
               .populate('posts')
-              .exec(function(err, feed) {
-                  callback(null, feed.posts);
+              .then(function(feed) {
+                  return feed.posts;
               });
-              
-            break;
             
-        case 'tag':
-            exports.Tag.findOne(stream.value, function(err, tag) {
-                if (err)
-                    return callback(err);
-                    
+        case 'tag':            
+            return exports.Tag.findOne(stream.value).then(function(tag) {
                 // TODO: get posts in subscriptions with this tag too
-                exports.Post.find({ tags: tag }, callback);
+                return exports.Post.find({ tags: tag });
             });
-            
-            break;
         
         default:
-            callback('InvalidStream');
+            return rsvp.defer().reject('Unknown stream type');
     }
 };
