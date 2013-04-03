@@ -155,10 +155,8 @@ app.get('/reader/api/0/unread-count', function(req, res) {
         
         return rsvp.all(user.subscriptions.map(function(subscription) {
             return db.Post
-              .where('_id').in(subscription.feed.posts)
-              .and({ tags: { $ne: tag }})
+              .count({ _id: { $in: subscription.feed.posts }, tags: { $ne: tag }})
               .limit(1000)
-              .count()
               .then(function(count) {
                   if (count === 0) return;
                   
