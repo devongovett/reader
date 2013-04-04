@@ -79,13 +79,39 @@ exports.postsForStream = function(stream) {
                   return feed.posts;
               });
             
-        case 'tag':            
+        case 'tag':
+            var user = stream.value.user;
             return exports.Tag.findOne(stream.value).then(function(tag) {
-                // TODO: get posts in subscriptions with this tag too
-                return exports.Post.find({ tags: tag });
+                if (!tag) return [];
+                
+                // get the feeds for subscriptions that have the tag
+                var feeds = user.subscriptions.filter(function(subscription) {
+                    return ~subscription.tags.indexOf(tag.id);
+                }).map(function(subscription) {
+                    return subscription.feed;
+                });
+                
+                // load the feeds
+                feeds = exports.Feed
+                    .where('_id').in(feeds)
+                    .populate('posts');
+                    
+                // find posts with the tag
+                var posts = exports.Post.find({ tags: tag });
+                
+                // merge them into a single list of posts
+                return rsvp.all([posts, feeds]).then(function(results) {
+                    var posts = results[0], feeds = results[1];
+                    
+                    feeds.forEach(function(feed) {
+                        posts.push.apply(posts, feed.posts);
+                    });
+                    
+                    return posts;
+                });
             });
         
         default:
-            return rsvp.defer().reject('Unknown stream type');
+            return new rsvp.Promise().reject('Unknown stream type');
     }
 };

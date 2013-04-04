@@ -13,7 +13,7 @@ QUnit.asyncTest('rename tag', function() {
         QUnit.start();
     }).form({
         T: shared.token,
-        s: 'user/-/label/bar',
+        s: 'user/-/label/test',
         dest: 'user/-/label/updated'
     });
 });
@@ -93,11 +93,11 @@ QUnit.asyncTest('mark all as read feed', function() {
         QUnit.start();
     }).form({
         T: shared.token,
-        s: 'feed/http://example.com/feed1.xml'
+        s: 'feed/http://example.com/feed3.xml'
     });
 });
 
-QUnit.asyncTest('mark all as read tag', function() {
+QUnit.asyncTest('mark all as read post tag', function() {
     request.post(shared.api + '/mark-all-as-read', function(err, res, body) {
         assert.equal(res.statusCode, 200);
         assert.equal(body, 'OK');
@@ -105,6 +105,17 @@ QUnit.asyncTest('mark all as read tag', function() {
     }).form({
         T: shared.token,
         s: 'user/-/label/folder1'
+    });
+});
+
+QUnit.asyncTest('mark all as read subscription tag', function() {
+    request.post(shared.api + '/mark-all-as-read', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.equal(body, 'OK');
+        QUnit.start();
+    }).form({
+        T: shared.token,
+        s: 'user/-/label/foo'
     });
 });
 
@@ -131,10 +142,10 @@ QUnit.asyncTest('list tags', function() {
         // assume that the subscription tests have already run
         assert.deepEqual(body, {
             tags: [
+                { id: 'user/' + shared.userID + '/label/bar', sortID: 0 },
                 { id: 'user/' + shared.userID + '/label/baz',  sortID: 0 },
                 { id: 'user/' + shared.userID + '/label/folder1', sortID: 0 },
                 { id: 'user/' + shared.userID + '/label/foo',  sortID: 0 },
-                { id: 'user/' + shared.userID + '/label/test', sortID: 0 },
                 { id: 'user/' + shared.userID + '/state/com.google/read', sortID: 0 }
             ]
         });
@@ -156,24 +167,16 @@ QUnit.asyncTest('unread count', function() {
         assert.deepEqual(body, {
             max: 1000,
             unreadcounts: [{
-                id: 'feed/http://example.com/feed.xml',
-                count: 2,
+                id: 'feed/http://example.com/feed1.xml',
+                count: 5,
                 newestItemTimestampUsec: 0
             }, {
                 id: 'feed/http://example.com/feed2.xml',
                 count: 5,
                 newestItemTimestampUsec: 0
             }, {
-                id: 'feed/http://example.com/feed3.xml',
-                count: 3,
-                newestItemTimestampUsec: 0
-            }, {
-                id: 'user/' + shared.userID + '/label/foo',
-                count: 2,
-                newestItemTimestampUsec: 0
-            }, {
-                id: 'user/' + shared.userID + '/label/test',
-                count: 2,
+                id: 'user/' + shared.userID + '/label/bar',
+                count: 10,
                 newestItemTimestampUsec: 0
             }, {
                 id: 'user/' + shared.userID + '/state/com.google/reading-list',
