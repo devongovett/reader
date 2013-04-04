@@ -94,6 +94,7 @@ exports.postsForStream = function(stream) {
                 // load the feeds
                 feeds = exports.Feed
                     .where('_id').in(feeds)
+                    .select('posts')
                     .populate('posts');
                     
                 // find posts with the tag
