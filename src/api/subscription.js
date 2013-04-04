@@ -152,7 +152,7 @@ app.get('/reader/api/0/subscription/list', function(req, res) {
             var categories = feed.tagsForUser(req.user).map(function(tag) {
                 return {
                     id: tag.stringID,
-                    label: tag.title || tag.tag
+                    label: tag.name
                 };
             });
             

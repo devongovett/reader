@@ -12,7 +12,7 @@ app.get('/reader/api/0/tag/list', function(req, res) {
     db.Tag.find({ user: req.user }).then(function(tags) {
         var ret = [];
         tags.forEach(function(tag) {
-            if (!(tag.type == 'state' && tag.tag == 'com.google/reading-list')) {
+            if (!(tag.type == 'state' && tag.name == 'com.google/reading-list')) {
                 ret.push({
                     id: tag.stringID,
                     sortID: tag.sortID || 0 // TODO
