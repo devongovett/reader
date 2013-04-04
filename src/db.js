@@ -10,7 +10,6 @@ exports.Feed = require('./models/feed');
 exports.Post = require('./models/post');
 exports.User = require('./models/user');
 exports.Tag = require('./models/tag');
-exports.Subscription = require('./models/subscription');
 
 // connect to the database
 var connected = false;
@@ -84,16 +83,9 @@ exports.postsForStream = function(stream) {
             return exports.Tag.findOne(stream.value).then(function(tag) {
                 if (!tag) return [];
                 
-                // get the feeds for subscriptions that have the tag
-                var feeds = user.subscriptions.filter(function(subscription) {
-                    return ~subscription.tags.indexOf(tag.id);
-                }).map(function(subscription) {
-                    return subscription.feed;
-                });
-                
-                // load the feeds
-                feeds = exports.Feed
-                    .where('_id').in(feeds)
+                // load the feeds with this tag and get thos posts
+                var feeds = exports.Feed
+                    .find({ tags: tag })
                     .select('posts')
                     .populate('posts');
                     

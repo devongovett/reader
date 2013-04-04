@@ -10,15 +10,18 @@ app.get('/reader/api/0/tag/list', function(req, res) {
         return;
     
     db.Tag.find({ user: req.user }).then(function(tags) {
-        tags = tags.map(function(tag) {
-            return {
-                id: tag.stringID,
-                sortID: tag.sortID || 0 // TODO
-            };
+        var ret = [];
+        tags.forEach(function(tag) {
+            if (!(tag.type == 'state' && tag.tag == 'com.google/reading-list')) {
+                ret.push({
+                    id: tag.stringID,
+                    sortID: tag.sortID || 0 // TODO
+                });
+            }
         });
         
         utils.respond(res, {
-            tags: tags
+            tags: ret
         });
     }, function(err) {
         res.send(500, 'Error=Unknown');
@@ -86,12 +89,8 @@ app.post('/reader/api/0/disable-tag', function(req, res) {
     db.Tag.findOneAndRemove(tag[0]).then(function(tag) {            
         if (tag) {
             // remove references to this tag from subscriptions and posts
-            req.user.subscriptions.forEach(function(sub) {
-                sub.tags.remove(tag);
-            });
-            
             return rsvp.all([
-                req.user.save(),
+                db.Feed.update({}, { $pull: { tags: tag }}),
                 db.Post.update({}, { $pull: { tags: tag }})
             ]);
         }
@@ -149,24 +148,24 @@ app.get('/reader/api/0/unread-count', function(req, res) {
     
     rsvp.all([
         db.Tag.findOne(tag),
-        req.user.populate('subscriptions.feed subscriptions.tags')
+        req.user.feeds
     ]).then(function(results) {
-        var tag = results[0], user = results[1];
+        var tag = results[0], feeds = results[1];
         
-        return rsvp.all(user.subscriptions.map(function(subscription) {
+        return rsvp.all(feeds.map(function(feed) {
             return db.Post
-              .count({ _id: { $in: subscription.feed.posts }, tags: { $ne: tag }})
+              .count({ _id: { $in: feed.posts }, tags: { $ne: tag }})
               .limit(1000)
               .then(function(count) {
                   if (count === 0) return;
                   
                   ret.unreadcounts.push({
-                      id: subscription.feed.stringID,
+                      id: feed.stringID,
                       count: count,
                       newestItemTimestampUsec: 0 // TODO
                   });
                   
-                  subscription.tags.forEach(function(tag) {
+                  feed.tagsForUser(req.user).forEach(function(tag) {
                       if (!tags[tag.stringID]) {
                           tags[tag.stringID] = {
                               id: tag.stringID,
@@ -189,7 +188,7 @@ app.get('/reader/api/0/unread-count', function(req, res) {
             count: total,
             newestItemTimestampUsec: 0 // TODO
         });
-            
+        
         utils.respond(res, ret);
     }, function(err) {
         res.send(500, 'Error=Unknown');

@@ -112,7 +112,7 @@ exports.parseTags = function(tags, user) {
         tags[i] = {
             user: user,
             type: match[2],
-            name: match[3]
+            tag: match[3]
         };
     }
     

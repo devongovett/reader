@@ -4,13 +4,13 @@ var mongoose = require('mongoose'),
 var Tag = mongoose.Schema({
     user: utils.ref('User'),
     type: String,       // state or label
-    name: String,
+    tag: String,
     sortID: Number
 });
 
 Tag.virtual('stringID').get(function() {
     var userID = this.user._id || this.user;
-    return 'user/' + userID + '/' + this.type + '/' + this.name;
+    return 'user/' + userID + '/' + this.type + '/' + this.tag;
 });
 
 module.exports = mongoose.model('Tag', Tag);

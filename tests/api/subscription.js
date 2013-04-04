@@ -168,6 +168,19 @@ QUnit.asyncTest('remove tags', function() {
     });
 });
 
+QUnit.asyncTest('edit title', function() {
+    request.post(shared.api + '/subscription/edit', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.equal(body, 'OK');
+        QUnit.start();
+    }).form({ 
+        s: 'feed/http://example.com/feed1.xml',
+        ac: 'edit',
+        T: shared.token,
+        t: 'Edited title'
+    });
+});
+
 QUnit.asyncTest('edit multiple', function() {
     request.post(shared.api + '/subscription/edit', function(err, res, body) {
         assert.equal(res.statusCode, 200);
@@ -263,7 +276,7 @@ QUnit.asyncTest('subscription list', function() {
                 }]
             }, {
                 id: 'feed/http://example.com/feed1.xml',
-                title: 'Test Blog',
+                title: 'Edited title',
                 firstitemmsec: 0,
                 sortid: 0,
                 categories: [{

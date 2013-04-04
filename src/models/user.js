@@ -1,14 +1,13 @@
 var mongoose = require('mongoose'),
     bcrypt = require('bcrypt'),
-    Subscription = require('./subscription');
+    utils = require('../utils');
     
 var SALT_WORK_FACTOR = 10;
 
 var User = mongoose.Schema({
     username: { type: String, required: true, index: { unique: true } },
     password: { type: String, required: true },
-    signupTime: { type: Date, default: Date.now },
-    subscriptions: [Subscription.schema]
+    signupTime: { type: Date, default: Date.now }
 });
 
 // hash passwords using bcrypt when they are changed
@@ -30,5 +29,19 @@ User.pre('save', function(next) {
 User.methods.checkPassword = function(password, callback) {
     bcrypt.compare(password, this.password, callback);
 };
+
+// A getter that returns a promise for all of the feeds a user is subscribed to
+User.virtual('feeds').get(function() {
+    var Feed = mongoose.model('Feed'),
+        Tag = mongoose.model('Tag');
+        
+    var tag = utils.parseTags('user/-/state/com.google/reading-list', this)[0];
+    return Tag.findOne(tag).then(function(tag) {
+        if (!tag) 
+            return [];
+            
+        return Feed.find({ tags: tag }).populate('tags');
+    });
+});
 
 module.exports = mongoose.model('User', User);

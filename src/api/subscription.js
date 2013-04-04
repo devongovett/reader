@@ -7,63 +7,54 @@ var express = require('express'),
     
 var app = module.exports = express();
 
-// Helper function to find a subscription in an array based on a feed
-function findSubscription(subscriptions, feed) {
-    if (!feed || !subscriptions)
-        return null;
-    
-    for (var i = 0; i < subscriptions.length; i++) {
-        if (String(subscriptions[i].feed) === feed.id)
-            return subscriptions[i];
-    }
-    
-    return null;
-}
-
 // Handlers for the subscription/edit actions
 var actions = {
-    subscribe: function(ctx, url) {    
+    subscribe: function(ctx, url) {
+        var feed = db.findOrCreate(db.Feed, { feedURL: url });
+        var tag = db.findOrCreate(db.Tag, utils.parseTags('user/-/state/com.google/reading-list', ctx.user)[0]);
+        
         // Find or create feed for this URL
-        return db.findOrCreate(db.Feed, { feedURL: url }).then(function(feed) {
+        return rsvp.all([feed, tag]).then(function(results) {
+            var feed = results[0], tag = results[1];
+            
             // If this feed was just added, start a high priority job to fetch it
             if (feed.numSubscribers === 0) {
                 jobs.create('feed', { feedID: feed.id })
                     .priority('high')
-                    .save()
+                    .save();
             }
             
-            // Find or add a Subscription for the feed
-            var subscription = findSubscription(ctx.user.subscriptions, feed);
-        
-            if (!subscription) {
-                subscription = new db.Subscription({ feed: feed });
-                ctx.user.subscriptions.push(subscription);
-            
-                // Increment feed.numSubscribers if a subscription is added
+            // Subscribe to the feed if the tag was not found
+            if (!~feed.tags.indexOf(tag.id)) {
+                feed.tags.addToSet(tag);
                 feed.numSubscribers++;
             }
-        
+                        
             // Add/remove tags and update title
             if (ctx.title)
-                subscription.title = ctx.title;
-            
-            return rsvp.all([    
-                db.editTags(subscription, ctx.addTags, ctx.removeTags),
-                feed.save()
-            ]);
+                feed.setTitleForUser(ctx.title, ctx.user);
+                            
+            return db.editTags(feed, ctx.addTags, ctx.removeTags).then(function() {
+                return feed.save();
+            });
         });
     },
 
     unsubscribe: function(ctx, url) {
+        var feed = db.Feed.findOne({ feedURL: url });
+        var tag = db.Tag.findOne(utils.parseTags('user/-/state/com.google/reading-list', ctx.user)[0]);
+        
         // Find a feed for this URL
-        return db.Feed.findOne({ feedURL: url }).then(function(feed) {
-            var subscription = findSubscription(ctx.user.subscriptions, feed);
-            if (!subscription) return;
-        
-            // Delete Subscription for this feed
-            subscription.remove();
-            feed.numSubscribers--;
-        
+        return rsvp.all([feed, tag]).then(function(results) {
+            var feed = results[0], tag = results[1];
+            if (!tag || !feed) return;
+            
+            // remove the reading-list tag from the feed for this user
+            if (~feed.tags.indexOf(tag.id)) {
+                feed.tags.remove(tag);
+                feed.numSubscribers--;
+            }
+            
             // If feed.numSubscribers is 0, delete feed
             if (feed.numSubscribers === 0)
                 return feed.remove();
@@ -73,18 +64,25 @@ var actions = {
     },
     
     edit: function(ctx, url, callback) {
+        var feed = db.Feed.findOne({ feedURL: url });
+        var tag = db.Tag.findOne(utils.parseTags('user/-/state/com.google/reading-list', ctx.user)[0]);
+        
         // Find a feed for this URL
-        return db.Feed.findOne({ feedURL: url }).then(function(feed) {
-            // Find Subscription for this URL
-            var subscription = findSubscription(ctx.user.subscriptions, feed);
-            if (!subscription) return;
+        return rsvp.all([feed, tag]).then(function(results) {
+            var feed = results[0], tag = results[1];
             
-            // Update subscription.title if needed
+            // Make sure the user was actually subscribed to this feed
+            if (!tag || !~feed.tags.indexOf(tag.id))
+                return;
+            
+            // Update the title if needed
             if (ctx.title)
-                subscription.title = ctx.title;
-                
-            // Add/remove tags from subscription
-            return db.editTags(subscription, ctx.addTags, ctx.removeTags);
+                feed.setTitleForUser(ctx.title, ctx.user);
+                                
+            // Add/remove tags
+            return db.editTags(feed, ctx.addTags, ctx.removeTags).then(function() {
+                return feed.save();
+            });
         });
     }
 };
@@ -122,8 +120,6 @@ app.post('/reader/api/0/subscription/edit', function(req, res) {
     
     // call the action function for each stream and then save the user
     rsvp.all(streams.map(action)).then(function() {
-        return ctx.user.save();
-    }).then(function() {
         res.send('OK');
     }, function(err) {
         res.send(500, 'Error=Unknown');
@@ -139,8 +135,6 @@ app.post('/reader/api/0/subscription/quickadd', function(req, res) {
         return res.send(400, 'Error=InvalidStream');
         
     actions.subscribe(req, streams[0]).then(function() {
-        return req.user.save();
-    }).then(function() {
         res.send('OK');
     }, function(err) {
         res.send(500, 'Error=Unknown');
@@ -152,21 +146,21 @@ app.get('/reader/api/0/subscription/list', function(req, res) {
     if (!utils.checkAuth(req, res))
         return;
         
-    req.user.populate('subscriptions.feed subscriptions.tags').then(function(user) {
-        var subscriptions = user.subscriptions.map(function(subscription) {
-            var categories = subscription.tags.map(function(tag) {
-                // TODO: check whether this only includes tags of type 'label'
+    // Find feeds the user is subscribed to
+    req.user.feeds.then(function(feeds) {
+        var subscriptions = feeds.map(function(feed) {
+            var categories = feed.tagsForUser(req.user).map(function(tag) {
                 return {
                     id: tag.stringID,
-                    label: tag.name
+                    label: tag.title || tag.tag
                 };
             });
             
             return {
-                id: 'feed/' + subscription.feed.feedURL,
-                title: subscription.title || subscription.feed.title || '(title unknown)',
+                id: 'feed/' + feed.feedURL,
+                title: feed.titleForUser(req.user),
                 firstitemmsec: 0, // TODO
-                sortid: subscription.sortID || 0,
+                sortid: feed.sortIDForUser(req.user),
                 categories: categories
             };
         });
@@ -186,10 +180,12 @@ app.get('/reader/api/0/subscribed', function(req, res) {
         return res.send(400, 'Error=InvalidStream');
         
     // Find a feed for the first stream
-    db.Feed.findOne({ feedURL: streams[0] }).then(function(feed) {
-        // Find Subscription for this URL
-        var subscription = findSubscription(req.user.subscriptions, feed);
-        res.send('' + !!subscription);
+    var tag = db.Tag.findOne(utils.parseTags('user/-/state/com.google/reading-list', req.user)[0]);
+    
+    tag.then(function(tag) {
+        return db.Feed.count({ tags: tag, feedURL: streams[0] });
+    }).then(function(count) {
+        res.send('' + !!count);
     }, function(err) {
         res.send(500, 'Error=Unknown');
     });
