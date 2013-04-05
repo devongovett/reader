@@ -123,7 +123,7 @@ exports.postsForStreams = function(streams, options) {
                 { tags: { $in: includeTags }}
             ],
             tags: { $nin: excludeTags },
-            date: {
+            published: {
                 $gte: new Date((1000 * options.minTime) || 0),
                 $lte: new Date((1000 * options.maxTime) || Date.now())
             }

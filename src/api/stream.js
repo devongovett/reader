@@ -75,14 +75,14 @@ app.get('/reader/api/0/stream/items/ids', function(req, res) {
         excludeTags: excludeTags,
         minTime: req.query.ot,
         maxTime: req.query.nt,
-        sort: req.query.r === 'o' ? 'date' : '-date',
+        sort: req.query.r === 'o' ? 'published' : '-published',
         limit: +req.query.n
     }).then(function(posts) {
         posts = posts.map(function(post) {
             return {
                 id: post.shortID,
                 directStreamIds: [], // TODO
-                timestampUsec: 1000 * post.date
+                timestampUsec: 1000 * post.published
             };
         });
         
@@ -113,6 +113,88 @@ app.get('/reader/api/0/stream/items/count', function(req, res) {
     });
 });
 
+// the stream/items/contents API supports both GET and POST requests
+function getItems(params, res) {
+    var items = utils.parseItems(params.i);
+    if (!items)
+        return res.send(400, 'Error=InvalidItem');
+        
+    if (params.output && !/^(json|atom|atom-hifi)$/.test(params.output))
+        return res.send(400, 'Error=InvalidOutput');
+                
+    db.Post
+      .where('_id').in(items)
+      .populate('feed tags')
+      .then(function(posts) {
+          if (posts.length === 0) {
+              return res.json({
+                  direction: 'ltr',
+                  title: 'Untitled Subscription',
+                  self: [{ href: res.req.protocol + '://' + res.req.headers.host + res.req.url }],
+                  updated: Date.now(),
+                  items: []
+              });
+          }
+          
+          var items = posts.map(function(post) {
+              var tags = post.tags.map(function(tag) {
+                  return tag.stringID;
+              });
+              
+              return {
+                  crawlTimeMsec: '' + (+post.feed.successfulCrawlTime),
+                  timestampUsec: '' + (1000 * post.published),
+                  id: post.longID,
+                  categories: tags.concat(post.categories),
+                  title: post.title,
+                  published: post.published / 1000 | 0,
+                  updated: post.updated / 1000 | 0,
+                  alternate: [{
+                      href: post.url,
+                      type: 'text/html'
+                  }],
+                  content: {
+                      direction: 'ltr',
+                      content: post.body
+                  },
+                  author: post.author,
+                  likingUsers: [],
+                  comments: [],
+                  annotations: [],
+                  origin: {
+                      streamId: post.feed.stringID,
+                      title: post.feed.title,
+                      htmlUrl: post.feed.siteURL
+                  }
+              };
+          });
+          
+          // TODO: atom output
+          // Google reader seems to take the feed info from the first item's feed
+          res.json({
+              direction: 'ltr',
+              id: posts[0].feed.stringID,
+              title: posts[0].feed.title,
+              self: [{ href: res.req.protocol + '://' + res.req.headers.host + res.req.url }],
+              alternate: [{
+                  href: posts[0].feed.siteURL,
+                  type: 'text/html'
+              }],
+              updated: posts[0].feed.lastModified / 1000 | 0,
+              items: items
+          });
+      }, function(err) {
+          if (err.name === 'CastError')
+            return res.send(400, 'Error=InvalidItem');
+          
+          res.send(500, 'Error=Unknown');
+      });
+}
+
 app.get('/reader/api/0/stream/items/contents', function(req, res) {
-    
+    getItems(req.query, res);
+});
+
+app.post('/reader/api/0/stream/items/contents', function(req, res) {
+    getItems(req.body, res);
 });

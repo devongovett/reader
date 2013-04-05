@@ -7,22 +7,22 @@
         <item>
             <title>A Test Post 1</title>
             <description>This is the main content of post 1. Isn't it great?</description>
-            <link>http://example.com/blog/1</link>
-            <guid>http://example.com/blog/1</guid>
+            <link>http://example.com/blog1/1</link>
+            <guid>http://example.com/blog1/1</guid>
             <pubDate>Thu, 07 Mar 2013 07:37:47 -0800</pubDate>
         </item>
         <item>
             <title>A Test Post 2</title>
             <description>This is the main content of post 2. Isn't it great?</description>
-            <link>http://example.com/blog/2</link>
-            <guid>http://example.com/blog/2</guid>
+            <link>http://example.com/blog1/2</link>
+            <guid>http://example.com/blog1/2</guid>
             <pubDate>Wed, 06 Mar 2013 02:32:13 -0800</pubDate>
         </item>
         <item>
             <title>A Test Post 3</title>
             <description>This is the main content of post 3. Isn't it great?</description>
-            <link>http://example.com/blog/3</link>
-            <guid>http://example.com/blog/3</guid>
+            <link>http://example.com/blog1/3</link>
+            <guid>http://example.com/blog1/3</guid>
             <pubDate>Tue, 05 Mar 2013 01:03:24 -0800</pubDate>
         </item>
     </channel>

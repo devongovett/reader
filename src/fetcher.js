@@ -7,7 +7,7 @@ var db = require('./db'),
     Feed = db.Feed,
     Post = db.Post,
     kue = require('kue'),
-    feedparser = require('feedparser')
+    feedparser = require('feedparser'),
     jobs = kue.createQueue();
     
 var UPDATE_INTERVAL = 10 * 60 * 1000;
@@ -69,7 +69,8 @@ jobs.process('feed', 20, function(job, done) {
                     body: post.description,
                     summary: post.summary !== post.description ? post.summary : null,
                     url: post.link,
-                    date: post.date,
+                    published: post.pubdate,
+                    updated: post.date,
                     author: post.author,
                     commentsURL: post.comments,
                     categories: post.categories

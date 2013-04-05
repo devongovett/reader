@@ -329,3 +329,123 @@ QUnit.asyncTest('item count tag', function() {
         QUnit.start();
     });
 });
+
+QUnit.asyncTest('item contents missing item', function() {
+    request(shared.api + '/stream/items/contents', function(err, res, body) {
+        assert.equal(res.statusCode, 400);
+        assert.equal(body, 'Error=InvalidItem');
+        QUnit.start();
+    });
+});
+
+QUnit.asyncTest('item contents invalid item', function() {
+    request(shared.api + '/stream/items/contents?i=1386864356855952360', function(err, res, body) {
+        assert.equal(res.statusCode, 400);
+        assert.equal(body, 'Error=InvalidItem');
+        QUnit.start();
+    });
+});
+
+QUnit.asyncTest('item contents invalid output', function() {
+    request(shared.api + '/stream/items/contents?i=15183366035062724894069358601&output=invalid', function(err, res, body) {
+        assert.equal(res.statusCode, 400);
+        assert.equal(body, 'Error=InvalidOutput');
+        QUnit.start();
+    });
+});
+
+QUnit.asyncTest('item contents unknown item', function() {
+    request(shared.api + '/stream/items/contents?i=15183366035062724894069358601', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.ok(/json/.test(res.headers['content-type']));
+        
+        body = JSON.parse(body);
+        assert.equal(body.direction, 'ltr');
+        assert.equal(body.title, 'Untitled Subscription');
+        assert.deepEqual(body.self, [{ href: shared.api + '/stream/items/contents?i=15183366035062724894069358601' }]);
+        assert.equal(typeof body.updated, 'number');
+        assert.deepEqual(body.items, []);
+        
+        QUnit.start();
+    });
+});
+
+QUnit.asyncTest('item contents single item', function() {
+    require('../../src/db').Post.findOne({ url: 'http://example.com/blog1/1' }, function(err, post) {
+        request(shared.api + '/stream/items/contents?i=' + post.shortID, function(err, res, body) {
+            assert.equal(res.statusCode, 200);
+            assert.ok(/json/.test(res.headers['content-type']));
+            
+            body = JSON.parse(body);
+            assert.equal(body.direction, 'ltr');
+            assert.equal(body.id, 'feed/http://example.com/feed.xml')
+            assert.equal(body.title, 'Test Blog');
+            assert.deepEqual(body.self, [{ href: shared.api + '/stream/items/contents?i=' + post.shortID }]);
+            assert.deepEqual(body.alternate, [{ href: 'http://example.com/', type: 'text/html' }]);
+            assert.equal(typeof body.updated, 'number');
+            assert.ok(Array.isArray(body.items));
+            
+            var item = body.items[0];
+            assert.equal(typeof item.crawlTimeMsec, 'string');
+            assert.equal(typeof item.timestampUsec, 'string');
+            assert.ok(/tag:google.com,2005:reader\/item\/[0-9a-f]+/.test(item.id));
+            assert.deepEqual(item.categories.sort(), ['user/' + shared.userID + '/label/folder1', 'user/' + shared.userID + '/state/com.google/read']);
+            assert.equal(item.title, 'A Test Post 1');
+            assert.equal(item.published, 1362670667);
+            assert.equal(item.updated, 1362670667);
+            assert.deepEqual(item.alternate, [{ href: 'http://example.com/blog1/1', type: 'text/html' }]);
+            assert.deepEqual(item.content, { direction: 'ltr', content: 'This is the main content of post 1. Isn\'t it great?' });
+            assert.equal(item.author, null);
+            assert.deepEqual(item.likingUsers, []);
+            assert.deepEqual(item.comments, []);
+            assert.deepEqual(item.annotations, []);
+            assert.deepEqual(item.origin, { streamId: 'feed/http://example.com/feed.xml', title: 'Test Blog', htmlUrl: 'http://example.com/' });
+            
+            QUnit.start();
+        });
+    });
+});
+
+QUnit.asyncTest('item contents multiple items', function() {
+    require('../../src/db').Post.find({ url: { $in: ['http://example.com/blog1/1', 'http://example.com/blog1/2'] }}, function(err, posts) {
+        var url = shared.api + '/stream/items/contents?i=' + posts[0].shortID + '&i=' + posts[1].shortID;
+        request(url, function(err, res, body) {
+            assert.equal(res.statusCode, 200);
+            assert.ok(/json/.test(res.headers['content-type']));
+            
+            body = JSON.parse(body);
+            assert.equal(body.direction, 'ltr');
+            assert.equal(body.id, 'feed/http://example.com/feed.xml')
+            assert.equal(body.title, 'Test Blog');
+            assert.deepEqual(body.self, [{ href: url }]);
+            assert.deepEqual(body.alternate, [{ href: 'http://example.com/', type: 'text/html' }]);
+            assert.equal(typeof body.updated, 'number');
+            assert.ok(Array.isArray(body.items));
+            
+            body.items.forEach(function(item) {
+                assert.equal(typeof item.crawlTimeMsec, 'string');
+                assert.equal(typeof item.timestampUsec, 'string');
+                assert.ok(/tag:google.com,2005:reader\/item\/[0-9a-f]+/.test(item.id));
+                assert.ok(Array.isArray(item.categories));
+                assert.equal(typeof item.title, 'string');
+                assert.equal(typeof item.published, 'number');
+                assert.equal(typeof item.updated, 'number');
+                assert.ok(Array.isArray(item.alternate));
+                assert.equal(item.alternate.length, 1);
+                assert.ok(/^http:\/\/example.com\/blog1\/[01]$/.test(item.alternate[0].href));
+                assert.equal(item.alternate[0].type, 'text/html');
+                assert.equal(typeof item.content, 'object');
+                assert.equal(item.content.direction, 'ltr');
+                assert.equal(typeof item.content.content, 'string');
+                assert.equal(item.author, null);
+                assert.deepEqual(item.likingUsers, []);
+                assert.deepEqual(item.comments, []);
+                assert.deepEqual(item.annotations, []);
+                assert.equal(typeof item.origin, 'object');
+                assert.deepEqual(Object.keys(item.origin), ['streamId', 'title', 'htmlUrl']);
+            });
+            
+            QUnit.start();
+        });
+    });
+});
