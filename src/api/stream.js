@@ -44,11 +44,12 @@ app.get('/reader/api/0/stream/details', function(req, res) {
 });
 
 app.get('/reader/api/0/stream/items/ids', function(req, res) {
+    // TODO: auth not required for public streams (e.g. feeds)
     if (!utils.checkAuth(req, res))
         return;
     
     // validate input
-    var streams = utils.parseStreams(req.query.s);
+    var streams = utils.parseStreams(req.query.s, req.user);
     if (!streams)
         return res.send(400, 'Error=InvalidStream');
         
@@ -64,7 +65,7 @@ app.get('/reader/api/0/stream/items/ids', function(req, res) {
     if (req.query.r && !/^[no]$/.test(req.query.r))
         return res.send(400, 'Error=InvalidRank');
                 
-    var excludeTags = utils.parseTags(req.query.xt);
+    var excludeTags = utils.parseTags(req.query.xt, req.user);
     if (req.query.xt && !excludeTags)
         return res.send(400, 'Error=InvalidTag');
     
@@ -95,7 +96,21 @@ app.get('/reader/api/0/stream/items/ids', function(req, res) {
 });
 
 app.get('/reader/api/0/stream/items/count', function(req, res) {
-    
+    // TODO: auth not required for public streams (e.g. feeds)
+    if (!utils.checkAuth(req, res))
+        return;
+        
+    // Google Reader only accepts a single stream
+    // TODO: figure out what the `a` option does
+    var streams = utils.parseStreams(req.query.s, req.user);
+    if (!streams)
+        return res.send(400, 'Error=InvalidStream');
+        
+    db.postsForStreams(streams, { count: true }).then(function(count) {
+        res.send('' + count);
+    }, function(err) {
+        res.send(500, 'Error=Unknown');
+    });
 });
 
 app.get('/reader/api/0/stream/items/contents', function(req, res) {

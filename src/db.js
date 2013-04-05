@@ -100,27 +100,29 @@ exports.postsForStreams = function(streams, options) {
     });
         
     // load the tags to include and exclude
+    var includeTags, excludeTags;
     return rsvp.all([
         getTags(tags),
         getTags(options.excludeTags)
     ]).then(function(results) {
-        // prepare conditions
-        tags = {
-            $in: results[0],
-            $nin: results[1]
-        };
+        includeTags = results[0];
+        excludeTags = results[1];
         
         // find feeds given directly and by tag
         return exports.Feed.find({
-            $or: [{ feedURL: { $in: feeds }}, { tags: tags }]
+            $or: [
+                { feedURL: { $in: feeds }},
+                { tags: { $in: includeTags, $nin: excludeTags }}
+            ]
         });
     }).then(function(feeds) {
         // find posts by feed and tags, and filter by date
         var query = exports.Post.find({
             $or: [
                 { feed: { $in: feeds }},
-                { tags: tags }
+                { tags: { $in: includeTags }}
             ],
+            tags: { $nin: excludeTags },
             date: {
                 $gte: new Date((1000 * options.minTime) || 0),
                 $lte: new Date((1000 * options.maxTime) || Date.now())
@@ -132,6 +134,9 @@ exports.postsForStreams = function(streams, options) {
             
         if (options.sort)
             query.sort(options.sort);
+            
+        if (options.count)
+            query.count();
             
         return query;
     });

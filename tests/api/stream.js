@@ -209,3 +209,123 @@ QUnit.asyncTest('item ids ranking', function() {
         QUnit.start();
     });
 });
+
+QUnit.asyncTest('item ids tag', function() {
+    request(shared.api + '/stream/items/ids?s=user/-/state/com.google/reading-list&n=20', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.ok(/json/.test(res.headers['content-type']));
+        
+        body = JSON.parse(body);
+        assert.equal(typeof body.continuation, 'string');
+        assert.ok(Array.isArray(body.itemRefs));
+        assert.equal(body.itemRefs.length, 16);
+        
+        var lastTimestamp =Infinity;
+        body.itemRefs.forEach(function(post) {
+            assert.equal(typeof post.id, 'string');
+            assert.ok(/^-?[0-9]+$/.test(post.id));
+            assert.deepEqual(post.directStreamIds, []);
+            assert.ok(typeof post.timestampUsec, 'number');
+            assert.ok(post.timestampUsec <= lastTimestamp);
+            lastTimestamp = post.timestampUsec;
+        });
+        
+        QUnit.start();
+    });
+});
+
+QUnit.asyncTest('item ids feed exclude', function() {
+    request(shared.api + '/stream/items/ids?s=feed/http://example.com/feed.xml&n=20&xt=user/-/label/folder1', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.ok(/json/.test(res.headers['content-type']));
+        
+        body = JSON.parse(body);
+        assert.equal(typeof body.continuation, 'string');
+        assert.ok(Array.isArray(body.itemRefs));
+        assert.equal(body.itemRefs.length, 2);
+        
+        var lastTimestamp = Infinity;
+        body.itemRefs.forEach(function(post) {
+            assert.equal(typeof post.id, 'string');
+            assert.ok(/^-?[0-9]+$/.test(post.id));
+            assert.deepEqual(post.directStreamIds, []);
+            assert.ok(typeof post.timestampUsec, 'number');
+            assert.ok(post.timestampUsec <= lastTimestamp);
+            lastTimestamp = post.timestampUsec;
+        });
+        
+        QUnit.start();
+    });
+});
+
+QUnit.asyncTest('item ids tag exclude item tag', function() {
+    request(shared.api + '/stream/items/ids?s=user/-/state/com.google/reading-list&n=20&xt=user/-/state/com.google/read', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.ok(/json/.test(res.headers['content-type']));
+        
+        body = JSON.parse(body);
+        assert.equal(typeof body.continuation, 'string');
+        assert.ok(Array.isArray(body.itemRefs));
+        assert.equal(body.itemRefs.length, 10);
+        
+        var lastTimestamp = Infinity;
+        body.itemRefs.forEach(function(post) {
+            assert.equal(typeof post.id, 'string');
+            assert.ok(/^-?[0-9]+$/.test(post.id));
+            assert.deepEqual(post.directStreamIds, []);
+            assert.ok(typeof post.timestampUsec, 'number');
+            assert.ok(post.timestampUsec <= lastTimestamp);
+            lastTimestamp = post.timestampUsec;
+        });
+        
+        QUnit.start();
+    });
+});
+
+QUnit.asyncTest('item ids tag exclude feed tag', function() {
+    request(shared.api + '/stream/items/ids?s=user/-/state/com.google/reading-list&n=20&xt=user/-/label/bar', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.ok(/json/.test(res.headers['content-type']));
+        
+        body = JSON.parse(body);
+        assert.equal(typeof body.continuation, 'string');
+        assert.ok(Array.isArray(body.itemRefs));
+        assert.equal(body.itemRefs.length, 6);
+        
+        var lastTimestamp = Infinity;
+        body.itemRefs.forEach(function(post) {
+            assert.equal(typeof post.id, 'string');
+            assert.ok(/^-?[0-9]+$/.test(post.id));
+            assert.deepEqual(post.directStreamIds, []);
+            assert.ok(typeof post.timestampUsec, 'number');
+            assert.ok(post.timestampUsec <= lastTimestamp);
+            lastTimestamp = post.timestampUsec;
+        });
+        
+        QUnit.start();
+    });
+});
+
+QUnit.asyncTest('item count invalid stream', function() {
+    request(shared.api + '/stream/items/count?s=feed/dumb', function(err, res, body) {
+        assert.equal(res.statusCode, 400);
+        assert.equal(body, 'Error=InvalidStream');
+        QUnit.start();
+    });
+});
+
+QUnit.asyncTest('item count feed', function() {
+    request(shared.api + '/stream/items/count?s=feed/http://example.com/feed1.xml', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.equal(body, '5');
+        QUnit.start();
+    });
+});
+
+QUnit.asyncTest('item count tag', function() {
+    request(shared.api + '/stream/items/count?s=user/-/state/com.google/reading-list', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.equal(body, '16');
+        QUnit.start();
+    });
+});
