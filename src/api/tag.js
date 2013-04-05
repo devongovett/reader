@@ -115,7 +115,7 @@ app.post('/reader/api/0/mark-all-as-read', function(req, res) {
     // Get all of the posts in the stream
     // Google Reader appears to only accept a single stream
     var tag = db.findOrCreate(db.Tag, tag);
-    var posts = db.postsForStream(streams[0]);
+    var posts = db.postsForStreams(streams);
     
     rsvp.all([tag, posts]).then(function(results) {
         var tag = results[0], posts = results[1];

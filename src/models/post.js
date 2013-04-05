@@ -5,6 +5,7 @@ var mongoose = require('mongoose'),
 // User specific tags stored here to avoid having separate 
 // post records for each user
 var Post = mongoose.Schema({
+    feed: utils.ref('Feed'),
     guid: String,
     title: String,
     body: String,

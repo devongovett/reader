@@ -68,43 +68,58 @@ exports.editTags = function(record, addTags, removeTags) {
     return rsvp.all(add.concat(remove));
 };
 
-// Gets the Posts for a stream descriptor as parsed by utils.parseStreams
-exports.postsForStream = function(stream) {
-    switch (stream.type) {
-        case 'feed':
-            return exports.Feed.findOne({ feedURL: stream.value })
-              .populate('posts')
-              .then(function(feed) {
-                  return feed.posts;
-              });
-            
-        case 'tag':
-            var user = stream.value.user;
-            return exports.Tag.findOne(stream.value).then(function(tag) {
-                if (!tag) return [];
-                
-                // load the feeds with this tag and get thos posts
-                var feeds = exports.Feed
-                    .find({ tags: tag })
-                    .select('posts')
-                    .populate('posts');
-                    
-                // find posts with the tag
-                var posts = exports.Post.find({ tags: tag });
-                
-                // merge them into a single list of posts
-                return rsvp.all([posts, feeds]).then(function(results) {
-                    var posts = results[0], feeds = results[1];
-                    
-                    feeds.forEach(function(feed) {
-                        posts.push.apply(posts, feed.posts);
-                    });
-                    
-                    return posts;
-                });
-            });
+function getTags(tags) {
+    if (tags && tags.length)
+        return exports.Tag.find({ $or: tags });
+    
+    var promise = new rsvp.Promise();
+    promise.resolve([]);
+    return promise;
+}
+
+// Returns a list of posts for a list of streams (feeds and tags) as parsed
+// by utils.parseStreams.  Additional conditions including tags to exclude (xt),
+// and the beginning and ending dates to include (ot and nt) can be passed to 
+// filter the results further.
+exports.postsForStreams = function(streams, conditions) {
+    if (!conditions)
+        conditions = {};
+    
+    // separate streams by type
+    var feeds = [], tags = [];
+    streams.forEach(function(stream) {
+        if (stream.type === 'feed')
+            feeds.push(stream.value);
+        else
+            tags.push(stream.value);
+    });
         
-        default:
-            return new rsvp.Promise().reject('Unknown stream type');
-    }
+    // load the tags to include and exclude
+    return rsvp.all([
+        getTags(tags),
+        getTags(conditions.xt)
+    ]).then(function(results) {
+        // prepare conditions
+        tags = {
+            $in: results[0],
+            $nin: results[1]
+        };
+        
+        // find feeds given directly and by tag
+        return exports.Feed.find({
+            $or: [{ feedURL: { $in: feeds }}, { tags: tags }]
+        });
+    }).then(function(feeds) {
+        // find posts by feed and tags, and filter by date
+        return exports.Post.find({
+            $or: [
+                { feed: { $in: feeds }},
+                { tags: tags }
+            ],
+            date: {
+                $gte: new Date((1000 * conditions.ot) || 0),
+                $lte: new Date((1000 * conditions.nt) || Date.now())
+            }
+        });
+    });
 };

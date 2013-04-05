@@ -63,6 +63,7 @@ jobs.process('feed', 20, function(job, done) {
             
             if (!existingPosts[guid]) {
                 var post = new Post({
+                    feed: feed,
                     guid: guid,
                     title: post.title,
                     body: post.description,
