@@ -184,3 +184,18 @@ exports.parseItems = function(items) {
     
     return items;
 };
+
+exports.shortItemId = function(id) {
+    var num = bignum(id, 16);
+    
+    // get a signed version if needed
+    if (id[0] === 'f') {
+        var buf = num.toBuffer();
+        for (var j = 0; j < buf.length; j++)
+            buf[j] = 0xff - buf[j];
+        
+        num = bignum.fromBuffer(buf).add(1).neg();
+    }
+    
+    return num.toString(10);
+}

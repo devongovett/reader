@@ -18,4 +18,12 @@ var Post = mongoose.Schema({
     tags: [utils.ref('Tag')]
 });
 
+Post.virtual('shortID').get(function() {
+    return utils.shortItemId(this.id);
+});
+
+Post.virtual('longID').get(function() {
+    return 'tag:google.com,2005:reader/item/' + this.id;
+});
+
 module.exports = mongoose.model('Post', Post);

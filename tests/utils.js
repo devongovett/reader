@@ -87,3 +87,9 @@ QUnit.test('parseItems', function() {
     assert.deepEqual(utils.parseItems('0458y'), null);
     assert.deepEqual(utils.parseItems('12-2'), null);
 });
+
+QUnit.test('shortItemId', function() {
+    assert.equal(utils.shortItemId('5d0cfa30041d4348'), '6705009029382226760');
+    assert.equal(utils.shortItemId('024025978b5e50d2'), '162170919393841362');
+    assert.equal(utils.shortItemId('fb115bd6d34a8e9f'), '-355401917359550817');
+});

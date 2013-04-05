@@ -78,12 +78,17 @@ function getTags(tags) {
 }
 
 // Returns a list of posts for a list of streams (feeds and tags) as parsed
-// by utils.parseStreams.  Additional conditions including tags to exclude (xt),
-// and the beginning and ending dates to include (ot and nt) can be passed to 
-// filter the results further.
-exports.postsForStreams = function(streams, conditions) {
-    if (!conditions)
-        conditions = {};
+// by utils.parseStreams.
+//
+// Options:
+//   excludeTags - items containing these tags will be excluded from the results
+//   minTime - the date of the oldest item to include
+//   maxTime - the date of the newest item to include
+//   limit - the maximum number of items to return
+//   sort - the field to sort (see mongoose docs)
+exports.postsForStreams = function(streams, options) {
+    if (!options)
+        options = {};
     
     // separate streams by type
     var feeds = [], tags = [];
@@ -97,7 +102,7 @@ exports.postsForStreams = function(streams, conditions) {
     // load the tags to include and exclude
     return rsvp.all([
         getTags(tags),
-        getTags(conditions.xt)
+        getTags(options.excludeTags)
     ]).then(function(results) {
         // prepare conditions
         tags = {
@@ -111,15 +116,23 @@ exports.postsForStreams = function(streams, conditions) {
         });
     }).then(function(feeds) {
         // find posts by feed and tags, and filter by date
-        return exports.Post.find({
+        var query = exports.Post.find({
             $or: [
                 { feed: { $in: feeds }},
                 { tags: tags }
             ],
             date: {
-                $gte: new Date((1000 * conditions.ot) || 0),
-                $lte: new Date((1000 * conditions.nt) || Date.now())
+                $gte: new Date((1000 * options.minTime) || 0),
+                $lte: new Date((1000 * options.maxTime) || Date.now())
             }
         });
+        
+        if (options.limit)
+            query.limit(options.limit);
+            
+        if (options.sort)
+            query.sort(options.sort);
+            
+        return query;
     });
 };
