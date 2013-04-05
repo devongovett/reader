@@ -123,11 +123,87 @@ QUnit.asyncTest('item ids', function() {
         assert.equal(typeof body.continuation, 'string');
         assert.ok(Array.isArray(body.itemRefs));
         assert.equal(body.itemRefs.length, 5);
+        
+        var lastTimestamp = Infinity;
         body.itemRefs.forEach(function(post) {
             assert.equal(typeof post.id, 'string');
             assert.ok(/^-?[0-9]+$/.test(post.id));
             assert.deepEqual(post.directStreamIds, []);
             assert.ok(typeof post.timestampUsec, 'number');
+            assert.ok(post.timestampUsec < lastTimestamp);
+            lastTimestamp = post.timestampUsec;
+        });
+        
+        QUnit.start();
+    });
+});
+
+QUnit.asyncTest('item ids count', function() {
+    request(shared.api + '/stream/items/ids?s=feed/http://example.com/feed1.xml&n=3', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.ok(/json/.test(res.headers['content-type']));
+        
+        body = JSON.parse(body);
+        assert.equal(typeof body.continuation, 'string');
+        assert.ok(Array.isArray(body.itemRefs));
+        assert.equal(body.itemRefs.length, 3);
+        
+        var lastTimestamp = Infinity;
+        body.itemRefs.forEach(function(post) {
+            assert.equal(typeof post.id, 'string');
+            assert.ok(/^-?[0-9]+$/.test(post.id));
+            assert.deepEqual(post.directStreamIds, []);
+            assert.ok(typeof post.timestampUsec, 'number');
+            assert.ok(post.timestampUsec < lastTimestamp);
+            lastTimestamp = post.timestampUsec;
+        });
+        
+        QUnit.start();
+    });
+});
+
+QUnit.asyncTest('item ids date range', function() {
+    request(shared.api + '/stream/items/ids?s=feed/http://example.com/feed1.xml&n=20&ot=1362474204&nt=1362773793', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.ok(/json/.test(res.headers['content-type']));
+        
+        body = JSON.parse(body);
+        assert.equal(typeof body.continuation, 'string');
+        assert.ok(Array.isArray(body.itemRefs));
+        assert.equal(body.itemRefs.length, 4);
+        
+        var lastTimestamp = Infinity;
+        body.itemRefs.forEach(function(post) {
+            assert.equal(typeof post.id, 'string');
+            assert.ok(/^-?[0-9]+$/.test(post.id));
+            assert.deepEqual(post.directStreamIds, []);
+            assert.ok(typeof post.timestampUsec, 'number');
+            assert.ok(post.timestampUsec < lastTimestamp);
+            lastTimestamp = post.timestampUsec;
+        });
+        
+        QUnit.start();
+    });
+});
+
+QUnit.asyncTest('item ids ranking', function() {
+    request(shared.api + '/stream/items/ids?s=feed/http://example.com/feed1.xml&n=20&r=o', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.ok(/json/.test(res.headers['content-type']));
+        
+        body = JSON.parse(body);
+        assert.equal(typeof body.continuation, 'string');
+        assert.ok(Array.isArray(body.itemRefs));
+        assert.equal(body.itemRefs.length, 5);
+        
+        var lastTimestamp = 0;
+        body.itemRefs.forEach(function(post) {
+            assert.equal(typeof post.id, 'string');
+            assert.ok(/^-?[0-9]+$/.test(post.id));
+            assert.deepEqual(post.directStreamIds, []);
+            assert.ok(typeof post.timestampUsec, 'number');
+            assert.ok(post.timestampUsec > lastTimestamp);
+            lastTimestamp = post.timestampUsec;
         });
         
         QUnit.start();
