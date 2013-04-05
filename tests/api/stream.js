@@ -449,3 +449,39 @@ QUnit.asyncTest('item contents multiple items', function() {
         });
     });
 });
+
+QUnit.asyncTest('item contents post', function() {
+    require('../../src/db').Post.findOne({ url: 'http://example.com/blog1/1' }, function(err, post) {
+        request.post(shared.api + '/stream/items/contents', function(err, res, body) {
+            assert.equal(res.statusCode, 200);
+            assert.ok(/json/.test(res.headers['content-type']));
+            
+            body = JSON.parse(body);
+            assert.equal(body.direction, 'ltr');
+            assert.equal(body.id, 'feed/http://example.com/feed.xml')
+            assert.equal(body.title, 'Test Blog');
+            assert.deepEqual(body.self, [{ href: shared.api + '/stream/items/contents' }]);
+            assert.deepEqual(body.alternate, [{ href: 'http://example.com/', type: 'text/html' }]);
+            assert.equal(typeof body.updated, 'number');
+            assert.ok(Array.isArray(body.items));
+            
+            var item = body.items[0];
+            assert.equal(typeof item.crawlTimeMsec, 'string');
+            assert.equal(typeof item.timestampUsec, 'string');
+            assert.ok(/tag:google.com,2005:reader\/item\/[0-9a-f]+/.test(item.id));
+            assert.deepEqual(item.categories.sort(), ['user/' + shared.userID + '/label/folder1', 'user/' + shared.userID + '/state/com.google/read']);
+            assert.equal(item.title, 'A Test Post 1');
+            assert.equal(item.published, 1362670667);
+            assert.equal(item.updated, 1362670667);
+            assert.deepEqual(item.alternate, [{ href: 'http://example.com/blog1/1', type: 'text/html' }]);
+            assert.deepEqual(item.content, { direction: 'ltr', content: 'This is the main content of post 1. Isn\'t it great?' });
+            assert.equal(item.author, null);
+            assert.deepEqual(item.likingUsers, []);
+            assert.deepEqual(item.comments, []);
+            assert.deepEqual(item.annotations, []);
+            assert.deepEqual(item.origin, { streamId: 'feed/http://example.com/feed.xml', title: 'Test Blog', htmlUrl: 'http://example.com/' });
+            
+            QUnit.start();
+        }).form({ i: post.shortID });
+    });
+});
