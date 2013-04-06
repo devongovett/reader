@@ -371,7 +371,8 @@ QUnit.asyncTest('item contents unknown item', function() {
 });
 
 QUnit.asyncTest('item contents single item', function() {
-    require('../../src/db').Post.findOne({ url: 'http://example.com/blog1/1' }, function(err, post) {
+    require('../../src/db').Feed.findOne({ feedURL: 'http://example.com/feed.xml' }).populate('posts').then(function(feed) {
+        var post = feed.posts[0];
         request(shared.api + '/stream/items/contents?i=' + post.shortID, function(err, res, body) {
             assert.equal(res.statusCode, 200);
             assert.ok(/json/.test(res.headers['content-type']));
@@ -384,6 +385,7 @@ QUnit.asyncTest('item contents single item', function() {
             assert.deepEqual(body.alternate, [{ href: 'http://example.com/', type: 'text/html' }]);
             assert.equal(typeof body.updated, 'number');
             assert.ok(Array.isArray(body.items));
+            assert.equal(body.items.length, 1);
             
             var item = body.items[0];
             assert.equal(typeof item.crawlTimeMsec, 'string');
@@ -393,7 +395,7 @@ QUnit.asyncTest('item contents single item', function() {
             assert.equal(item.title, 'A Test Post 1');
             assert.equal(item.published, 1362670667);
             assert.equal(item.updated, 1362670667);
-            assert.deepEqual(item.alternate, [{ href: 'http://example.com/blog1/1', type: 'text/html' }]);
+            assert.deepEqual(item.alternate, [{ href: 'http://example.com/blog/1', type: 'text/html' }]);
             assert.deepEqual(item.content, { direction: 'ltr', content: 'This is the main content of post 1. Isn\'t it great?' });
             assert.equal(item.author, null);
             assert.deepEqual(item.likingUsers, []);
@@ -407,7 +409,8 @@ QUnit.asyncTest('item contents single item', function() {
 });
 
 QUnit.asyncTest('item contents multiple items', function() {
-    require('../../src/db').Post.find({ url: { $in: ['http://example.com/blog1/1', 'http://example.com/blog1/2'] }}, function(err, posts) {
+   require('../../src/db').Feed.findOne({ feedURL: 'http://example.com/feed.xml' }).populate('posts').then(function(feed) {
+        var posts = feed.posts;
         var url = shared.api + '/stream/items/contents?i=' + posts[0].shortID + '&i=' + posts[1].shortID;
         request(url, function(err, res, body) {
             assert.equal(res.statusCode, 200);
@@ -421,6 +424,7 @@ QUnit.asyncTest('item contents multiple items', function() {
             assert.deepEqual(body.alternate, [{ href: 'http://example.com/', type: 'text/html' }]);
             assert.equal(typeof body.updated, 'number');
             assert.ok(Array.isArray(body.items));
+            assert.equal(body.items.length, 2);
             
             body.items.forEach(function(item) {
                 assert.equal(typeof item.crawlTimeMsec, 'string');
@@ -432,7 +436,7 @@ QUnit.asyncTest('item contents multiple items', function() {
                 assert.equal(typeof item.updated, 'number');
                 assert.ok(Array.isArray(item.alternate));
                 assert.equal(item.alternate.length, 1);
-                assert.ok(/^http:\/\/example.com\/blog1\/[01]$/.test(item.alternate[0].href));
+                assert.ok(/^http:\/\/example.com\/blog\/[12]$/.test(item.alternate[0].href));
                 assert.equal(item.alternate[0].type, 'text/html');
                 assert.equal(typeof item.content, 'object');
                 assert.equal(item.content.direction, 'ltr');
@@ -451,7 +455,8 @@ QUnit.asyncTest('item contents multiple items', function() {
 });
 
 QUnit.asyncTest('item contents post', function() {
-    require('../../src/db').Post.findOne({ url: 'http://example.com/blog1/1' }, function(err, post) {
+    require('../../src/db').Feed.findOne({ feedURL: 'http://example.com/feed.xml' }).populate('posts').then(function(feed) {
+        var post = feed.posts[0];
         request.post(shared.api + '/stream/items/contents', function(err, res, body) {
             assert.equal(res.statusCode, 200);
             assert.ok(/json/.test(res.headers['content-type']));
@@ -464,6 +469,7 @@ QUnit.asyncTest('item contents post', function() {
             assert.deepEqual(body.alternate, [{ href: 'http://example.com/', type: 'text/html' }]);
             assert.equal(typeof body.updated, 'number');
             assert.ok(Array.isArray(body.items));
+            assert.equal(body.items.length, 1);
             
             var item = body.items[0];
             assert.equal(typeof item.crawlTimeMsec, 'string');
@@ -473,7 +479,7 @@ QUnit.asyncTest('item contents post', function() {
             assert.equal(item.title, 'A Test Post 1');
             assert.equal(item.published, 1362670667);
             assert.equal(item.updated, 1362670667);
-            assert.deepEqual(item.alternate, [{ href: 'http://example.com/blog1/1', type: 'text/html' }]);
+            assert.deepEqual(item.alternate, [{ href: 'http://example.com/blog/1', type: 'text/html' }]);
             assert.deepEqual(item.content, { direction: 'ltr', content: 'This is the main content of post 1. Isn\'t it great?' });
             assert.equal(item.author, null);
             assert.deepEqual(item.likingUsers, []);
@@ -483,5 +489,372 @@ QUnit.asyncTest('item contents post', function() {
             
             QUnit.start();
         }).form({ i: post.shortID });
+    });
+});
+
+QUnit.asyncTest('item stream contents invalid stream', function() {
+    request(shared.api + '/stream/contents/feed/unknown', function(err, res, body) {
+        assert.equal(res.statusCode, 400);
+        assert.equal(body, 'Error=InvalidStream');
+        QUnit.start();
+    });
+});
+
+QUnit.asyncTest('item stream contents invalid count', function() {
+    request(shared.api + '/stream/contents/feed/http://example.com/feed1.xml?n=dfih', function(err, res, body) {
+        assert.equal(res.statusCode, 400);
+        assert.equal(body, 'Error=InvalidCount');
+        QUnit.start();
+    });
+});
+
+QUnit.asyncTest('item stream contents invalid old time', function() {
+    request(shared.api + '/stream/contents/feed/http://example.com/feed1.xml?ot=dof', function(err, res, body) {
+        assert.equal(res.statusCode, 400);
+        assert.equal(body, 'Error=InvalidTime');
+        QUnit.start();
+    });
+});
+
+QUnit.asyncTest('item stream contents invalid new time', function() {
+    request(shared.api + '/stream/contents/feed/http://example.com/feed1.xml?ot=123&nt=dff', function(err, res, body) {
+        assert.equal(res.statusCode, 400);
+        assert.equal(body, 'Error=InvalidTime');
+        QUnit.start();
+    });
+});
+
+QUnit.asyncTest('item stream contents invalid rank', function() {
+    request(shared.api + '/stream/contents/feed/http://example.com/feed1.xml?n=20&ot=123&nt=234&r=c', function(err, res, body) {
+        assert.equal(res.statusCode, 400);
+        assert.equal(body, 'Error=InvalidRank');
+        QUnit.start();
+    });
+});
+
+QUnit.asyncTest('item stream contents invalid tag', function() {
+    request(shared.api + '/stream/contents/feed/http://example.com/feed1.xml?n=20&ot=123&nt=234&r=n&xt=user/unknown', function(err, res, body) {
+        assert.equal(res.statusCode, 400);
+        assert.equal(body, 'Error=InvalidTag');
+        QUnit.start();
+    });
+});
+
+QUnit.asyncTest('item stream contents', function() {
+    var url = shared.api + '/stream/contents/user/-/state/com.google/reading-list?n=20';
+    request(url, function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.ok(/json/.test(res.headers['content-type']));
+        
+        body = JSON.parse(body);
+        assert.equal(body.direction, 'ltr');
+        assert.equal(body.id, 'user/' + shared.userID + '/state/com.google/reading-list');
+        assert.equal(body.title, 'com.google/reading-list');
+        assert.equal(typeof body.continuation, 'string');
+        assert.deepEqual(body.self, [{ href: url }]);
+        // assert.deepEqual(body.alternate, [{ href: 'http://example.com/', type: 'text/html' }]);
+        assert.equal(typeof body.updated, 'number');
+        assert.ok(Array.isArray(body.items));
+        assert.equal(body.items.length, 16);
+        
+        var lastPublished = Infinity;
+        body.items.forEach(function(item) {
+            assert.equal(typeof item.crawlTimeMsec, 'string');
+            assert.equal(typeof item.timestampUsec, 'string');
+            assert.ok(/tag:google.com,2005:reader\/item\/[0-9a-f]+/.test(item.id));
+            assert.ok(Array.isArray(item.categories));
+            assert.equal(typeof item.title, 'string');
+            assert.equal(typeof item.published, 'number');
+            
+            assert.ok(item.published <= lastPublished);
+            lastPublished = item.published;
+            
+            assert.equal(typeof item.updated, 'number');
+            assert.ok(Array.isArray(item.alternate));
+            assert.equal(item.alternate.length, 1);
+            assert.ok(typeof item.alternate[0].href, 'string');
+            assert.equal(item.alternate[0].type, 'text/html');
+            assert.equal(typeof item.content, 'object');
+            assert.equal(item.content.direction, 'ltr');
+            assert.equal(typeof item.content.content, 'string');
+            assert.equal(item.author, null);
+            assert.deepEqual(item.likingUsers, []);
+            assert.deepEqual(item.comments, []);
+            assert.deepEqual(item.annotations, []);
+            assert.equal(typeof item.origin, 'object');
+            assert.deepEqual(Object.keys(item.origin), ['streamId', 'title', 'htmlUrl']);
+        });
+        
+        QUnit.start();
+    });
+});
+
+QUnit.asyncTest('item stream contents default count', function() {
+    var url = shared.api + '/stream/contents/user/-/state/com.google/reading-list';
+    request(url, function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.ok(/json/.test(res.headers['content-type']));
+        
+        body = JSON.parse(body);
+        assert.equal(body.direction, 'ltr');
+        assert.equal(body.id, 'user/' + shared.userID + '/state/com.google/reading-list');
+        assert.equal(body.title, 'com.google/reading-list');
+        assert.equal(typeof body.continuation, 'string');
+        assert.deepEqual(body.self, [{ href: url }]);
+        assert.equal(typeof body.updated, 'number');
+        assert.ok(Array.isArray(body.items));
+        assert.equal(body.items.length, 16);
+        
+        var lastPublished = Infinity;
+        body.items.forEach(function(item) {
+            assert.equal(typeof item.crawlTimeMsec, 'string');
+            assert.equal(typeof item.timestampUsec, 'string');
+            assert.ok(/tag:google.com,2005:reader\/item\/[0-9a-f]+/.test(item.id));
+            assert.ok(Array.isArray(item.categories));
+            assert.equal(typeof item.title, 'string');
+            assert.equal(typeof item.published, 'number');
+            
+            assert.ok(item.published <= lastPublished);
+            lastPublished = item.published;
+            
+            assert.equal(typeof item.updated, 'number');
+            assert.ok(Array.isArray(item.alternate));
+            assert.equal(item.alternate.length, 1);
+            assert.ok(typeof item.alternate[0].href, 'string');
+            assert.equal(item.alternate[0].type, 'text/html');
+            assert.equal(typeof item.content, 'object');
+            assert.equal(item.content.direction, 'ltr');
+            assert.equal(typeof item.content.content, 'string');
+            assert.equal(item.author, null);
+            assert.deepEqual(item.likingUsers, []);
+            assert.deepEqual(item.comments, []);
+            assert.deepEqual(item.annotations, []);
+            assert.equal(typeof item.origin, 'object');
+            assert.deepEqual(Object.keys(item.origin), ['streamId', 'title', 'htmlUrl']);
+        });
+        
+        QUnit.start();
+    });
+});
+
+QUnit.asyncTest('item stream contents count', function() {
+    var url = shared.api + '/stream/contents/user/-/state/com.google/reading-list?n=6';
+    request(url, function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.ok(/json/.test(res.headers['content-type']));
+        
+        body = JSON.parse(body);
+        assert.equal(body.direction, 'ltr');
+        assert.equal(body.id, 'user/' + shared.userID + '/state/com.google/reading-list');
+        assert.equal(body.title, 'com.google/reading-list');
+        assert.equal(typeof body.continuation, 'string');
+        assert.deepEqual(body.self, [{ href: url }]);
+        assert.equal(typeof body.updated, 'number');
+        assert.ok(Array.isArray(body.items));
+        assert.equal(body.items.length, 6);
+        
+        var lastPublished = Infinity;
+        body.items.forEach(function(item) {
+            assert.equal(typeof item.crawlTimeMsec, 'string');
+            assert.equal(typeof item.timestampUsec, 'string');
+            assert.ok(/tag:google.com,2005:reader\/item\/[0-9a-f]+/.test(item.id));
+            assert.ok(Array.isArray(item.categories));
+            assert.equal(typeof item.title, 'string');
+            assert.equal(typeof item.published, 'number');
+            
+            assert.ok(item.published <= lastPublished);
+            lastPublished = item.published;
+            
+            assert.equal(typeof item.updated, 'number');
+            assert.ok(Array.isArray(item.alternate));
+            assert.equal(item.alternate.length, 1);
+            assert.ok(typeof item.alternate[0].href, 'string');
+            assert.equal(item.alternate[0].type, 'text/html');
+            assert.equal(typeof item.content, 'object');
+            assert.equal(item.content.direction, 'ltr');
+            assert.equal(typeof item.content.content, 'string');
+            assert.equal(item.author, null);
+            assert.deepEqual(item.likingUsers, []);
+            assert.deepEqual(item.comments, []);
+            assert.deepEqual(item.annotations, []);
+            assert.equal(typeof item.origin, 'object');
+            assert.deepEqual(Object.keys(item.origin), ['streamId', 'title', 'htmlUrl']);
+        });
+        
+        QUnit.start();
+    });
+});
+
+QUnit.asyncTest('item stream contents count', function() {
+    var url = shared.api + '/stream/contents/feed/http://example.com/feed1.xml?ot=1362474204&nt=1362773793';
+    request(url, function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.ok(/json/.test(res.headers['content-type']));
+        
+        body = JSON.parse(body);
+        assert.equal(body.direction, 'ltr');
+        assert.equal(body.id, 'feed/http://example.com/feed1.xml');
+        assert.equal(body.title, 'Test Blog');
+        assert.equal(body.description, 'A test blog that is so awesome');
+        assert.equal(typeof body.continuation, 'string');
+        assert.deepEqual(body.self, [{ href: url }]);
+        assert.equal(typeof body.updated, 'number');
+        assert.ok(Array.isArray(body.items));
+        assert.equal(body.items.length, 4);
+        
+        var lastPublished = Infinity;
+        body.items.forEach(function(item) {
+            assert.equal(typeof item.crawlTimeMsec, 'string');
+            assert.equal(typeof item.timestampUsec, 'string');
+            assert.ok(/tag:google.com,2005:reader\/item\/[0-9a-f]+/.test(item.id));
+            assert.ok(Array.isArray(item.categories));
+            assert.equal(typeof item.title, 'string');
+            assert.equal(typeof item.published, 'number');
+            
+            assert.ok(item.published <= lastPublished);
+            lastPublished = item.published;
+            
+            assert.equal(typeof item.updated, 'number');
+            assert.ok(Array.isArray(item.alternate));
+            assert.equal(item.alternate.length, 1);
+            assert.ok(typeof item.alternate[0].href, 'string');
+            assert.equal(item.alternate[0].type, 'text/html');
+            assert.equal(typeof item.content, 'object');
+            assert.equal(item.content.direction, 'ltr');
+            assert.equal(typeof item.content.content, 'string');
+            assert.equal(item.author, null);
+            assert.deepEqual(item.likingUsers, []);
+            assert.deepEqual(item.comments, []);
+            assert.deepEqual(item.annotations, []);
+            assert.equal(typeof item.origin, 'object');
+            assert.deepEqual(Object.keys(item.origin), ['streamId', 'title', 'htmlUrl']);
+        });
+        
+        QUnit.start();
+    });
+});
+
+QUnit.asyncTest('item stream contents ranking', function() {
+    var url = shared.api + '/stream/contents/feed/http://example.com/feed1.xml?r=o';
+    request(url, function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.ok(/json/.test(res.headers['content-type']));
+        
+        body = JSON.parse(body);
+        assert.equal(body.direction, 'ltr');
+        assert.equal(body.id, 'feed/http://example.com/feed1.xml');
+        assert.equal(body.title, 'Test Blog');
+        assert.equal(body.description, 'A test blog that is so awesome');
+        assert.equal(typeof body.continuation, 'string');
+        assert.deepEqual(body.self, [{ href: url }]);
+        assert.equal(typeof body.updated, 'number');
+        assert.ok(Array.isArray(body.items));
+        assert.equal(body.items.length, 5);
+        
+        var lastPublished = 0;
+        body.items.forEach(function(item) {
+            assert.equal(typeof item.crawlTimeMsec, 'string');
+            assert.equal(typeof item.timestampUsec, 'string');
+            assert.ok(/tag:google.com,2005:reader\/item\/[0-9a-f]+/.test(item.id));
+            assert.ok(Array.isArray(item.categories));
+            assert.equal(typeof item.title, 'string');
+            assert.equal(typeof item.published, 'number');
+            
+            assert.ok(item.published >= lastPublished);
+            lastPublished = item.published;
+            
+            assert.equal(typeof item.updated, 'number');
+            assert.ok(Array.isArray(item.alternate));
+            assert.equal(item.alternate.length, 1);
+            assert.ok(typeof item.alternate[0].href, 'string');
+            assert.equal(item.alternate[0].type, 'text/html');
+            assert.equal(typeof item.content, 'object');
+            assert.equal(item.content.direction, 'ltr');
+            assert.equal(typeof item.content.content, 'string');
+            assert.equal(item.author, null);
+            assert.deepEqual(item.likingUsers, []);
+            assert.deepEqual(item.comments, []);
+            assert.deepEqual(item.annotations, []);
+            assert.equal(typeof item.origin, 'object');
+            assert.deepEqual(Object.keys(item.origin), ['streamId', 'title', 'htmlUrl']);
+        });
+        
+        QUnit.start();
+    });
+});
+
+QUnit.asyncTest('item stream contents exclude', function() {
+    var url = shared.api + '/stream/contents/feed/http://example.com/feed.xml?xt=user/-/label/folder1';
+    request(url, function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.ok(/json/.test(res.headers['content-type']));
+        
+        body = JSON.parse(body);
+        assert.equal(body.direction, 'ltr');
+        assert.equal(body.id, 'feed/http://example.com/feed.xml');
+        assert.equal(body.title, 'Test Blog');
+        assert.equal(body.description, 'A test blog that is so awesome');
+        assert.equal(typeof body.continuation, 'string');
+        assert.deepEqual(body.self, [{ href: url }]);
+        assert.equal(typeof body.updated, 'number');
+        assert.ok(Array.isArray(body.items));
+        assert.equal(body.items.length, 2);
+        
+        var lastPublished = Infinity;
+        body.items.forEach(function(item) {
+            assert.equal(typeof item.crawlTimeMsec, 'string');
+            assert.equal(typeof item.timestampUsec, 'string');
+            assert.ok(/tag:google.com,2005:reader\/item\/[0-9a-f]+/.test(item.id));
+            assert.ok(Array.isArray(item.categories));
+            assert.equal(typeof item.title, 'string');
+            assert.equal(typeof item.published, 'number');
+            
+            assert.ok(item.published <= lastPublished);
+            lastPublished = item.published;
+            
+            assert.equal(typeof item.updated, 'number');
+            assert.ok(Array.isArray(item.alternate));
+            assert.equal(item.alternate.length, 1);
+            assert.ok(typeof item.alternate[0].href, 'string');
+            assert.equal(item.alternate[0].type, 'text/html');
+            assert.equal(typeof item.content, 'object');
+            assert.equal(item.content.direction, 'ltr');
+            assert.equal(typeof item.content.content, 'string');
+            assert.equal(item.author, null);
+            assert.deepEqual(item.likingUsers, []);
+            assert.deepEqual(item.comments, []);
+            assert.deepEqual(item.annotations, []);
+            assert.equal(typeof item.origin, 'object');
+            assert.deepEqual(Object.keys(item.origin), ['streamId', 'title', 'htmlUrl']);
+        });
+        
+        QUnit.start();
+    });
+});
+
+QUnit.asyncTest('item stream contents unknown feed', function() {
+    var url = shared.api + '/stream/contents/feed/http://unknown.com/';
+    request(url, function(err, res, body) {
+        assert.equal(res.statusCode, 404);
+        assert.equal(body, 'Error=FeedNotFound');
+        QUnit.start();
+    });
+});
+
+QUnit.asyncTest('item stream contents unknown tag', function() {
+    var url = shared.api + '/stream/contents/user/-/label/unknown';
+    request(url, function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.ok(/json/.test(res.headers['content-type']));
+        
+        body = JSON.parse(body);
+        assert.equal(body.direction, 'ltr');
+        assert.equal(body.id, 'user/' + shared.userID + '/label/unknown');
+        assert.equal(body.title, 'unknown');
+        assert.deepEqual(body.self, [{ href: url }]);
+        assert.equal(typeof body.updated, 'number');
+        assert.deepEqual(body.items, []);
+        
+        QUnit.start();
     });
 });
