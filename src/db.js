@@ -138,6 +138,9 @@ exports.postsForStreams = function(streams, options) {
         if (options.count)
             query.count();
             
+        if (options.populate)
+            query.populate(options.populate);
+            
         return query;
     });
 };

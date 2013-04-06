@@ -198,4 +198,8 @@ exports.shortItemId = function(id) {
     }
     
     return num.toString(10);
-}
+};
+
+exports.fullURL = function(req) {
+    return req.protocol + '://' + req.headers.host + req.url;
+};
