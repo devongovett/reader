@@ -3,7 +3,6 @@
  */
 
 var express = require('express'),
-    crypto = require('crypto'),
     db = require('./db'),
     utils = require('./utils');
     

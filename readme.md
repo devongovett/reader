@@ -25,6 +25,7 @@ Some unofficial API documentation on the old Google Reader API that we'd be copy
 * http://code.google.com/p/pyrfeed/wiki/GoogleReaderAPI
 * http://code.google.com/p/google-reader-api/w/list
 * https://developers.google.com/accounts/docs/AuthForInstalledApps
+* https://github.com/alexch/sharebro/blob/master/notes/google-reader-api.txt
 
 Some documentation on the dirtier side of RSS/Atom feeds:
 https://docs.google.com/document/d/1cvq67iQpk2C7ufOsefsfKnGCXeUIv46NQHbnHkm8PtU/edit?usp=sharing
