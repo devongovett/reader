@@ -1,8 +1,8 @@
 var QUnit = require('qunit-cli'),
     assert = QUnit.assert,
-    request = require('request'),
     utils = require('../../src/utils'),
-    shared = require('../shared');
+    shared = require('../shared'),
+    request = shared.request;
     
 QUnit.module('Tag');
 
@@ -120,7 +120,7 @@ QUnit.asyncTest('mark all as read subscription tag', function() {
 });
 
 QUnit.asyncTest('list tags unauthenticated', function() {
-    request(shared.api + '/tag/list', { jar: false }, function(err, res, body) {
+    request(shared.api + '/tag/list', { headers: {}}, function(err, res, body) {
         assert.equal(res.statusCode, 401);
         assert.equal(body, 'Error=AuthRequired');
         QUnit.start();

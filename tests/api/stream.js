@@ -1,8 +1,8 @@
 var QUnit = require('qunit-cli'),
     assert = QUnit.assert,
-    request = require('request'),
     utils = require('../../src/utils'),
-    shared = require('../shared');
+    shared = require('../shared'),
+    request = shared.request;
     
 QUnit.module('Stream');
 

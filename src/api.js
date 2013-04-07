@@ -9,12 +9,11 @@ var express = require('express'),
     
 var app = module.exports = express();
 app.use(express.bodyParser());
-app.use(express.cookieParser('gobbledygook'));
-app.use(express.session({ key: 'SID' }));
+app.use(require('./session'));
 
 // loads the currently logged in user into req.user
 app.use(function(req, res, next) {
-    if (!req.session.user)
+    if (!req.session || !req.session.user)
         return next();
         
     db.User.findOne(req.session.user, function(err, user) {

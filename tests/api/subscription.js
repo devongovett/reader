@@ -1,13 +1,13 @@
 var QUnit = require('qunit-cli'),
     assert = QUnit.assert,
-    request = require('request'),
     nock = require('nock'),
-    shared = require('../shared');
+    shared = require('../shared'),
+    request = shared.request;
 
 QUnit.module('Subscription');
 
 QUnit.asyncTest('subscribe unauthenticated', function() {
-    request.post(shared.api + '/subscription/edit', { jar: false }, function(err, res, body) {
+    request.post(shared.api + '/subscription/edit', { headers: {}}, function(err, res, body) {
         assert.equal(res.statusCode, 401);
         assert.equal(body, 'Error=AuthRequired');
         QUnit.start();

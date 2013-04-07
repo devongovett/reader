@@ -1,8 +1,8 @@
 var QUnit = require('qunit-cli'),
     assert = QUnit.assert,
-    request = require('request'),
     xml = require('libxmljs'),
-    shared = require('../shared');
+    shared = require('../shared'),
+    request = shared.request;
 
 QUnit.module('Auth');
 
@@ -58,15 +58,23 @@ QUnit.asyncTest('valid ClientLogin', function() {
         assert.ok(/LSID=.+\n/.test(body));
         assert.ok(/Auth=.+\n/.test(body));
         
+        shared.setAuth(body.match(/Auth=(.+)/)[1]);
         QUnit.start();
     }).form({ Email: 'test@example.com', Passwd: 'test' });
 });
 
 QUnit.asyncTest('token auth required', function() {
-    request.get({ url: shared.api + '/token', jar: false }, function(err, res, body) {
+    request(shared.api + '/token', { headers: {}}, function(err, res, body) {
         assert.equal(res.statusCode, 401);
         assert.equal(body, 'Error=AuthRequired');
-        
+        QUnit.start();
+    });
+});
+
+QUnit.asyncTest('token invalid auth', function() {
+    request(shared.api + '/token', { headers: { Authorization: 'GoogleLogin invalid' }}, function(err, res, body) {
+        assert.equal(res.statusCode, 401);
+        assert.equal(body, 'Error=AuthRequired');
         QUnit.start();
     });
 });
