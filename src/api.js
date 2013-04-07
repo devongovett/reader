@@ -40,6 +40,7 @@ app.use(require('./api/user'));
 app.use(require('./api/subscription'));
 app.use(require('./api/stream'));
 app.use(require('./api/tag'));
+app.use(require('./api/preference'));
 
 app.listen(app.get('port'));
 console.log('Started server on port ' + app.get('port'));

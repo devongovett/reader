@@ -10,6 +10,7 @@ exports.Feed = require('./models/feed');
 exports.Post = require('./models/post');
 exports.User = require('./models/user');
 exports.Tag = require('./models/tag');
+exports.Preference = require('./models/preference');
 
 // connect to the database
 var connected = false;
@@ -45,6 +46,17 @@ exports.findOrCreate = function(model, item) {
             return model.create(item);
             
         return record;
+    });
+};
+
+exports.updateOrCreate = function(model, item, update) {
+    return model.update(item, update).then(function(affected) {
+        if (!affected) {
+            for (var key in update)
+                item[key] = update[key];
+                
+            return model.create(item);
+        }
     });
 };
 

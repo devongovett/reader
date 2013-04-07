@@ -14,6 +14,7 @@ require('./api/user');
 require('./api/subscription');
 require('./api/tag');
 require('./api/stream');
+require('./api/preference');
 
 // destroy the testing database when we're done
 QUnit.done(function() {
