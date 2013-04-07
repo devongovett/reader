@@ -104,7 +104,9 @@ QUnit.asyncTest('user-info', function() {
         assert.equal(typeof body.signupTimeSec, 'number');
         assert.equal(body.isMultiLoginEnabled, false);
         
+        assert.equal(res.headers['x-reader-user'], body.userId);
         shared.userID = body.userId; // save for later
+        
         QUnit.start();
     });
 });

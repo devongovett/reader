@@ -18,6 +18,7 @@ app.use(function(req, res, next) {
         
     db.User.findOne(req.session.user, function(err, user) {
         req.user = user;
+        res.set('X-Reader-User', req.user.id);
         next();
     });
 });
