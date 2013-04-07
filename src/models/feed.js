@@ -43,11 +43,15 @@ Feed.methods.tagsForUser = function(user) {
 };
 
 Feed.methods.titleForUser = function(user) {
-    return this.userInfo[user.id] || this.title || '(title unknown)';
+    var info = this.userInfo[user.id];
+    return (info && info.title) || this.title || '(title unknown)';
 };
 
 Feed.methods.setTitleForUser = function(title, user) {
-    this.userInfo[user.id] = title;
+    if (!this.userInfo[user.id])
+        this.userInfo[user.id] = {};
+        
+    this.userInfo[user.id].title = title;
     this.markModified('userInfo');
     return this;
 };
