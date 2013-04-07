@@ -47,7 +47,7 @@ module.exports = function(req, res, next) {
 };
 
 function getSession(req, callback) {
-    var match = /^GoogleLogin auth=([0-9a-f]+)$/.exec(req.headers.authorization);
+    var match = /^GoogleLogin auth=([0-9a-f]+)$/.exec(req.get('Authorization'));
     if (!match)
         return callback(null, null);
         

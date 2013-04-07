@@ -1,6 +1,5 @@
 var QUnit = require('qunit-cli'),
     assert = QUnit.assert,
-    utils = require('../../src/utils'),
     shared = require('../shared'),
     request = shared.request;
     
