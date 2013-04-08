@@ -137,15 +137,23 @@ QUnit.asyncTest('list tags', function() {
         body.tags.sort(function(a, b) {
             return a.id <= b.id ? -1 : 1;
         });
+        
+        // test sortids
+        body.tags.forEach(function(tag) {
+            assert.equal(typeof tag.sortid, 'string');
+            assert.equal(tag.sortid.length, 8);
+            assert.ok(/[0-9A-F]/i.test(tag.sortid));
+            delete tag.sortid;
+        });
     
         // assume that the subscription tests have already run
         assert.deepEqual(body, {
             tags: [
-                { id: 'user/' + shared.userID + '/label/bar', sortID: 0 },
-                { id: 'user/' + shared.userID + '/label/baz',  sortID: 0 },
-                { id: 'user/' + shared.userID + '/label/folder1', sortID: 0 },
-                { id: 'user/' + shared.userID + '/label/foo',  sortID: 0 },
-                { id: 'user/' + shared.userID + '/state/com.google/read', sortID: 0 }
+                { id: 'user/' + shared.userID + '/label/bar' },
+                { id: 'user/' + shared.userID + '/label/baz' },
+                { id: 'user/' + shared.userID + '/label/folder1' },
+                { id: 'user/' + shared.userID + '/label/foo' },
+                { id: 'user/' + shared.userID + '/state/com.google/read' }
             ]
         });
     

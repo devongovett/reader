@@ -2,8 +2,8 @@
 // header instead of cookies.
 // See http://code.google.com/p/google-reader-api/wiki/Authentication
 
-var crypto = require('crypto'),
-    pause = require('pause'),
+var pause = require('pause'),
+    utils = require('./utils'),
     redis = require('redis');
     
 var client = redis.createClient();
@@ -28,10 +28,8 @@ module.exports = function(req, res, next) {
         
         set: function(sess) {
             // generate session ID automatically
-            if (!session) {
-                var buf = crypto.randomBytes(24);
-                sess.id = buf.toString('hex').slice(0, 24);
-            }
+            if (!session) 
+                sess.id = utils.uid(24);
             
             session = sess;
         }

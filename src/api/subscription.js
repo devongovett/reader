@@ -160,7 +160,7 @@ app.get('/reader/api/0/subscription/list', function(req, res) {
                 id: 'feed/' + feed.feedURL,
                 title: feed.titleForUser(req.user),
                 firstitemmsec: 0, // TODO
-                sortid: feed.sortIDForUser(req.user),
+                sortid: feed.sortID,
                 categories: categories
             };
         });

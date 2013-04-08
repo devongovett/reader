@@ -166,11 +166,11 @@ app.get('/reader/api/0/stream/contents/*', function(req, res) {
         
     if (req.query.r && !/^[no]$/.test(req.query.r))
         return res.send(400, 'Error=InvalidRank');
-                
+        
     var excludeTags = utils.parseTags(req.query.xt, req.user);
     if (req.query.xt && !excludeTags)
         return res.send(400, 'Error=InvalidTag');
-    
+        
     // load posts
     db.postsForStreams(streams, {
         excludeTags: excludeTags,

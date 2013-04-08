@@ -5,7 +5,7 @@ var Tag = mongoose.Schema({
     user: utils.ref('User'),
     type: String,       // state or label
     name: String,
-    sortID: Number
+    sortID: { type: String, default: utils.uid }
 });
 
 Tag.virtual('stringID').get(function() {

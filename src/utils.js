@@ -1,6 +1,7 @@
 var mongoose = require('mongoose'),
     xml = require('libxmljs'),
-    bignum = require('bignum');
+    bignum = require('bignum'),
+    crypto = require('crypto');
 
 exports.ref = function(type) {
     return {
@@ -202,4 +203,9 @@ exports.shortItemId = function(id) {
 
 exports.fullURL = function(req) {
     return req.protocol + '://' + req.headers.host + req.url;
+};
+
+exports.uid = function(length) {
+    if (!length) length = 8;
+    return crypto.randomBytes(length).toString('hex').slice(0, length);
 };

@@ -259,6 +259,12 @@ QUnit.asyncTest('subscription list', function() {
             sub.categories.sort(function(a, b) {
                 return a.label <= b.label ? -1 : 1;
             });
+            
+            // test sortids
+            assert.equal(typeof sub.sortid, 'string');
+            assert.equal(sub.sortid.length, 8);
+            assert.ok(/[0-9A-F]/i.test(sub.sortid));
+            delete sub.sortid;
         });
         
         assert.deepEqual(body, {
@@ -266,7 +272,6 @@ QUnit.asyncTest('subscription list', function() {
                 id: 'feed/http://example.com/feed.xml',
                 title: 'Test Blog',
                 firstitemmsec: 0,
-                sortid: 0,
                 categories: [{
                     id: 'user/' + shared.userID + '/label/foo',
                     label: 'foo'
@@ -278,7 +283,6 @@ QUnit.asyncTest('subscription list', function() {
                 id: 'feed/http://example.com/feed1.xml',
                 title: 'Edited title',
                 firstitemmsec: 0,
-                sortid: 0,
                 categories: [{
                     id: 'user/' + shared.userID + '/label/bar',
                     label: 'bar'
@@ -287,7 +291,6 @@ QUnit.asyncTest('subscription list', function() {
                 id: 'feed/http://example.com/feed2.xml',
                 title: 'Test Blog',
                 firstitemmsec: 0,
-                sortid: 0,
                 categories: [{
                     id: 'user/' + shared.userID + '/label/bar',
                     label: 'bar'
@@ -296,7 +299,6 @@ QUnit.asyncTest('subscription list', function() {
                 id: 'feed/http://example.com/feed3.xml',
                 title: 'Test Blog',
                 firstitemmsec: 0,
-                sortid: 0,
                 categories: []
             }]
         });

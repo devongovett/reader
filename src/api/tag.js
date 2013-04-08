@@ -15,7 +15,7 @@ app.get('/reader/api/0/tag/list', function(req, res) {
             if (!(tag.type == 'state' && tag.name == 'com.google/reading-list')) {
                 ret.push({
                     id: tag.stringID,
-                    sortID: tag.sortID || 0 // TODO
+                    sortid: tag.sortID
                 });
             }
         });

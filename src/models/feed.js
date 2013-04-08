@@ -19,16 +19,15 @@ var Feed = mongoose.Schema({
     // user/-/state/com.google/reading-list tag on the feed for that user
     tags: [utils.ref('Tag')],
     numSubscribers: { type: Number, default: 0 },
-    
-    // stores titles and sortIDs for users
-    userInfo: { type: {}, default: {} },
+    userTitles: { type: {}, default: {} },
+    sortID: { type: String, default: utils.uid },
     
     // fetcher metadata
     successfulCrawlTime: Date,
     failedCrawlTime: Date,
     lastFailureWasParseFailure: Boolean,
     lastModified: Date,
-    etag: String,
+    etag: String
 });
 
 Feed.virtual('stringID').get(function() {
@@ -43,22 +42,13 @@ Feed.methods.tagsForUser = function(user) {
 };
 
 Feed.methods.titleForUser = function(user) {
-    var info = this.userInfo[user.id];
-    return (info && info.title) || this.title || '(title unknown)';
+    return this.userTitles[user.id] || this.title || '(title unknown)';
 };
 
 Feed.methods.setTitleForUser = function(title, user) {
-    if (!this.userInfo[user.id])
-        this.userInfo[user.id] = {};
-        
-    this.userInfo[user.id].title = title;
-    this.markModified('userInfo');
+    this.userTitles[user.id] = title;
+    this.markModified('userTitles');
     return this;
-};
-
-Feed.methods.sortIDForUser = function(user) {
-    var info = this.userInfo[user.id];
-    return (info && info.sortID) || 0;
 };
 
 Feed.pre('remove', function(callback) {

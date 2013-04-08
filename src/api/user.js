@@ -1,5 +1,4 @@
 var express = require('express'),
-    crypto = require('crypto'),
     db = require('../db'),
     utils = require('../utils');
     
@@ -58,8 +57,7 @@ app.get('/reader/api/0/token', function(req, res) {
     if (!utils.checkAuth(req, res))
         return;
     
-    var buf = crypto.randomBytes(24);
-    req.session.token = buf.toString('hex').slice(0, 24);
+    req.session.token = utils.uid(24);
     req.session.tokenExpiry = Date.now() + 30 * 60 * 1000; // token expires in 30 minutes
     res.send(req.session.token);
 });
