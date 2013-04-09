@@ -10,7 +10,7 @@ exports.token = null;
 // to do authentication by default later on
 var request = require('request');
 exports.setAuth = function(auth) {
-    request = request.defaults({
+    request = require('request').defaults({
         headers: { Authorization: 'GoogleLogin auth=' + auth }
     });
 };

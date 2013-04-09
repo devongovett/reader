@@ -28,7 +28,7 @@ module.exports = function(req, res, next) {
         
         set: function(sess) {
             // generate session ID automatically
-            if (!session) 
+            if (sess) 
                 sess.id = utils.uid(24);
             
             session = sess;
