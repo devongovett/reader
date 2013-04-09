@@ -41,23 +41,11 @@ exports.dropDatabase = function(callback) {
 };
 
 exports.findOrCreate = function(model, item) {
-    return model.findOne(item).then(function(record) {
-        if (!record)
-            return model.create(item);
-            
-        return record;
-    });
+    return model.findOneAndUpdate(item, {}, { upsert: true });
 };
 
 exports.updateOrCreate = function(model, item, update) {
-    return model.update(item, update).then(function(affected) {
-        if (!affected) {
-            for (var key in update)
-                item[key] = update[key];
-                
-            return model.create(item);
-        }
-    });
+    return model.findOneAndUpdate(item, update, { upsert: true });
 };
 
 // Adds and removes tags from a subscription or post
