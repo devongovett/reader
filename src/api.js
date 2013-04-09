@@ -15,7 +15,7 @@ app.use(function(req, res, next) {
     if (!req.session || !req.session.user)
         return next();
         
-    db.User.findOne(req.session.user, function(err, user) {
+    db.User.findById(req.session.user, function(err, user) {
         req.user = user;
         res.set('X-Reader-User', req.user.id);
         next();
