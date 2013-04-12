@@ -857,3 +857,57 @@ QUnit.asyncTest('item stream contents unknown tag', function() {
         QUnit.start();
     });
 });
+
+QUnit.asyncTest('unauthenticated public feed', function() {
+    var urls = [
+        '/stream/items/ids?s=feed/http://example.com/feed.xml&n=20',
+        '/stream/items/count?s=feed/http://example.com/feed.xml',
+        '/stream/contents/feed/http://example.com/feed.xml',
+        '/stream/items/ids?s=feed/http://example.com/feed.xml&n=20&xt=user/-/label/foo' // exclude tags should be ignored
+    ];
+    
+    var i = 0;
+    urls.forEach(function(url) {
+        request(shared.api + url, { headers: {}}, function(err, res, body) {
+            assert.equal(res.statusCode, 200);
+            assert.notEqual(body, 'Error=AuthRequired');
+            if (++i >= urls.length)
+                QUnit.start();
+        });
+    });
+});
+
+QUnit.asyncTest('unauthenticated tag', function() {
+    var urls = [
+        '/stream/items/ids?s=user/-/label/foo&n=20',
+        '/stream/items/count?s=user/-/label/foo',
+        '/stream/contents/user/-/label/foo'
+    ];
+    
+    var i = 0;
+    urls.forEach(function(url) {
+        request(shared.api + url, { headers: {}}, function(err, res, body) {
+            assert.equal(res.statusCode, 401);
+            assert.equal(body, 'Error=AuthRequired');
+            if (++i >= urls.length)
+                QUnit.start();
+        });
+    });
+});
+
+QUnit.asyncTest('unauthenticated mixed streams', function() {
+    var urls = [
+        '/stream/items/ids?s=feed/http://example.com/feed.xml&s=user/-/label/foo&n=20',
+        '/stream/items/count?s=feed/http://example.com/feed.xml&s=user/-/label/foo'
+    ];
+    
+    var i = 0;
+    urls.forEach(function(url) {
+        request(shared.api + url, { headers: {}}, function(err, res, body) {
+            assert.equal(res.statusCode, 401);
+            assert.equal(body, 'Error=AuthRequired');
+            if (++i >= urls.length)
+                QUnit.start();
+        });
+    });
+});

@@ -100,6 +100,9 @@ exports.parseTags = function(tags, user) {
     if (!tags)
         return null;
         
+    if (!user)
+        return [];
+        
     if (!Array.isArray(tags))
         tags = [tags];
         

@@ -27,15 +27,22 @@ app.get('/reader/api/0/stream/details', function(req, res) {
     });
 });
 
+// Helper function that checks if a list of streams contains any tags
+function hasTagStreams(streams) {
+    return streams && streams.some(function(stream) { 
+        return stream.type === 'tag'; 
+    });
+}
+
 app.get('/reader/api/0/stream/items/ids', function(req, res) {
-    // TODO: auth not required for public streams (e.g. feeds)
-    if (!utils.checkAuth(req, res))
-        return;
-    
     // validate input
     var streams = utils.parseStreams(req.query.s, req.user);
     if (!streams)
         return res.send(400, 'Error=InvalidStream');
+        
+    // auth is not required for public streams (e.g. feeds)
+    if (hasTagStreams(streams) && !utils.checkAuth(req, res))
+        return;
         
     if (!/^[0-9]+$/.test(req.query.n))
         return res.send(400, 'Error=InvalidCount');
@@ -80,16 +87,16 @@ app.get('/reader/api/0/stream/items/ids', function(req, res) {
 });
 
 app.get('/reader/api/0/stream/items/count', function(req, res) {
-    // TODO: auth not required for public streams (e.g. feeds)
-    if (!utils.checkAuth(req, res))
-        return;
-        
     // Google Reader only accepts a single stream
     // TODO: figure out what the `a` option does
     var streams = utils.parseStreams(req.query.s, req.user);
     if (!streams)
         return res.send(400, 'Error=InvalidStream');
         
+    // auth is not required for public streams (e.g. feeds)
+    if (hasTagStreams(streams) && !utils.checkAuth(req, res))
+        return;
+    
     db.postsForStreams(streams, { count: true }).then(function(count) {
         res.send('' + count);
     }, function(err) {
@@ -146,14 +153,14 @@ function generateFeed(posts, feed) {
 }
 
 app.get('/reader/api/0/stream/contents/*', function(req, res) {
-    // TODO: auth not required for public streams (e.g. feeds)
-    if (!utils.checkAuth(req, res))
-        return;
-    
     // validate input
     var streams = utils.parseStreams(req.params[0], req.user);
     if (!streams)
         return res.send(400, 'Error=InvalidStream');
+        
+    // auth is not required for public streams (e.g. feeds)
+    if (hasTagStreams(streams) && !utils.checkAuth(req, res))
+        return;
         
     if (req.query.n && !/^[0-9]+$/.test(req.query.n))
         return res.send(400, 'Error=InvalidCount');
