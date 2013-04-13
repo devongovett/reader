@@ -8,6 +8,9 @@ var app = module.exports = express();
 // see https://developers.google.com/accounts/docs/AuthForInstalledApps
 // and http://code.google.com/p/google-reader-api/wiki/Authentication
 app.post('/accounts/ClientLogin', function(req, res) {
+    if (!req.body.Email || !req.body.Passwd)
+        return res.send(403, 'Error=BadAuthentication');
+    
     db.User.findOne({ username: req.body.Email }, function(err, user) {
         if (err || !user)
             return res.send(403, 'Error=BadAuthentication');

@@ -24,13 +24,40 @@ QUnit.asyncTest('duplicate registration', function() {
     }).form({ Email: 'test@example.com', Passwd: 'test' });
 });
 
-QUnit.asyncTest('invalid registration', function() {
+QUnit.asyncTest('missing registration email', function() {
     request.post(shared.server + '/accounts/register', function(err, res, body) {
         assert.equal(res.statusCode, 400);
         assert.equal(body, 'Error=BadRequest');
         
         QUnit.start();
     }).form({ Passwd: 'test' });
+});
+
+QUnit.asyncTest('invalid registration email', function() {
+    request.post(shared.server + '/accounts/register', function(err, res, body) {
+        assert.equal(res.statusCode, 400);
+        assert.equal(body, 'Error=BadRequest');
+        
+        QUnit.start();
+    }).form({ Email: 'invalid', Passwd: 'test' });
+});
+
+QUnit.asyncTest('missing registration password', function() {
+    request.post(shared.server + '/accounts/register', function(err, res, body) {
+        assert.equal(res.statusCode, 400);
+        assert.equal(body, 'Error=BadRequest');
+        
+        QUnit.start();
+    }).form({ Email: 'test@example.com' });
+});
+
+QUnit.asyncTest('empty registration password', function() {
+    request.post(shared.server + '/accounts/register', function(err, res, body) {
+        assert.equal(res.statusCode, 400);
+        assert.equal(body, 'Error=BadRequest');
+        
+        QUnit.start();
+    }).form({ Email: 'test@example.com', Passwd: '' });
 });
 
 QUnit.asyncTest('ClientLogin invalid username', function() {
@@ -49,6 +76,24 @@ QUnit.asyncTest('ClientLogin invalid password', function() {
         
         QUnit.start();
     }).form({ Email: 'test@example.com', Passwd: 'invalid' });
+});
+
+QUnit.asyncTest('ClientLogin missing password', function() {
+    request.post(shared.server + '/accounts/ClientLogin', function(err, res, body) {
+        assert.equal(res.statusCode, 403);
+        assert.equal(body, 'Error=BadAuthentication');
+        
+        QUnit.start();
+    }).form({ Email: 'test@example.com' });
+});
+
+QUnit.asyncTest('ClientLogin missing email', function() {
+    request.post(shared.server + '/accounts/ClientLogin', function(err, res, body) {
+        assert.equal(res.statusCode, 403);
+        assert.equal(body, 'Error=BadAuthentication');
+        
+        QUnit.start();
+    }).form({ Passwd: 'hi' });
 });
 
 QUnit.asyncTest('valid ClientLogin', function() {

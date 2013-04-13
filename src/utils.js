@@ -96,6 +96,10 @@ exports.parseFeeds = function(feeds) {
     return feeds;
 };
 
+exports.isEmail = function(email) {
+    return !!validator.check(email).isEmail();
+};
+
 exports.parseTags = function(tags, user) {
     if (!tags)
         return null;
