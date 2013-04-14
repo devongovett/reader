@@ -33,10 +33,10 @@ app.post('/accounts/ClientLogin', function(req, res) {
     });
 });
 
-// our own registration API (temporary?)
+// our own registration API
 app.post('/accounts/register', function(req, res) {
     var user = new db.User({
-        username: req.body.Email, // TODO: validate email address
+        username: req.body.Email,
         password: req.body.Passwd
     });
     
