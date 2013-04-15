@@ -191,10 +191,10 @@ app.get('/reader/api/0/subscribed', function(req, res) {
     });
 });
 
-app.get('/reader/api/0/subscription/export', function(req, res) {
+app.get('/reader/subscriptions/export', function(req, res) {
     // TODO: export OPML
 });
 
-app.get('/reader/api/0/subscription/import', function(req, res) {
+app.get('/reader/subscriptions/import', function(req, res) {
     // TODO: import OPML
 });
