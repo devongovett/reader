@@ -330,3 +330,55 @@ QUnit.asyncTest('subscribed unknown', function() {
         QUnit.start();
     });
 });
+
+QUnit.asyncTest('subscription OPML export', function() {
+    request(shared.server + '/reader/subscriptions/export', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.ok(/xml/.test(res.headers['content-type']));
+        
+        // we can't just do a straight compare because the feeds may be in a different order
+        // TODO: this is pretty hacky. there is probably a better way
+        var lines = body.split('\n');
+        assert.equal(20, lines.length);
+        
+        assert.deepEqual(lines.slice(0, 6), [
+            '<?xml version="1.0" encoding="UTF-8"?>',
+            '<opml version="1.0">',
+            '  <head>',
+            '    <title>test subscriptions</title>',
+            '  </head>',
+            '  <body>'
+        ]);
+        
+        assert.ok(~body.indexOf([
+            '    <outline title="foo" text="foo">',
+            '      <outline text="Test Blog" title="Test Blog" type="rss" xmlUrl="http://example.com/feed.xml" htmlUrl="http://example.com/"/>',
+            '    </outline>'
+        ].join('\n')));
+        
+        assert.ok(~body.indexOf([
+            '    <outline title="test" text="test">',
+            '      <outline text="Test Blog" title="Test Blog" type="rss" xmlUrl="http://example.com/feed.xml" htmlUrl="http://example.com/"/>',
+            '    </outline>',
+        ].join('\n')));
+        
+        assert.ok(~body.indexOf([
+            '    <outline title="bar" text="bar">',
+            '      <outline text="Edited title" title="Edited title" type="rss" xmlUrl="http://example.com/feed1.xml" htmlUrl="http://example.com/"/>',
+            '      <outline text="Test Blog" title="Test Blog" type="rss" xmlUrl="http://example.com/feed2.xml" htmlUrl="http://example.com/"/>',
+            '    </outline>',
+        ].join('\n')));
+        
+        assert.ok(~body.indexOf(
+            '    <outline text="Test Blog" title="Test Blog" type="rss" xmlUrl="http://example.com/feed3.xml" htmlUrl="http://example.com/"/>'
+        ));
+        
+        assert.deepEqual(lines.slice(17), [
+            '  </body>',
+            '</opml>',
+            ''
+        ]);
+        
+        QUnit.start();
+    });
+});

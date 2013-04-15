@@ -1,5 +1,6 @@
 var express = require('express'),
     rsvp = require('rsvp'),
+    xml = require('libxmljs'),
     db = require('../db'),
     utils = require('../utils'),
     kue = require('kue'),
@@ -192,7 +193,56 @@ app.get('/reader/api/0/subscribed', function(req, res) {
 });
 
 app.get('/reader/subscriptions/export', function(req, res) {
-    // TODO: export OPML
+    if (!utils.checkAuth(req, res))
+        return;
+        
+    // Find feeds the user is subscribed to
+    req.user.feeds.then(function(feeds) {        
+        var doc = new xml.Document();
+        var root = doc.node('opml').attr({ version: '1.0' });
+        root.node('head').node('title', req.user.username.split('@')[0] + ' subscriptions');
+        
+        var body = root.node('body');
+        var folders = {};
+        
+        // TODO: sort?
+        
+        feeds.forEach(function(feed) {
+            var tags = feed.tagsForUser(req.user),
+                title = feed.titleForUser(req.user);
+                
+            var attrs = {
+                text: title,
+                title: title,
+                type: 'rss',
+                xmlUrl: feed.feedURL,
+                htmlUrl: feed.siteURL                    
+            };
+            
+            if (tags.length === 0) {
+                body.node('outline').attr(attrs);
+            } else {
+                tags.forEach(function(tag) {
+                    if (tag.type !== 'label')
+                        return;
+                
+                    if (!folders[tag.name]) {
+                        folders[tag.name] = body.node('outline').attr({
+                            title: tag.name,
+                            text: tag.name
+                        });
+                    }
+                    
+                    folders[tag.name].node('outline').attr(attrs);
+                });
+            }
+        });
+        
+        res.type('xml').send(doc.toString());
+        
+    }, function(err) {
+        res.send(500, 'Error=Unknown');
+    });
 });
 
 app.get('/reader/subscriptions/import', function(req, res) {
