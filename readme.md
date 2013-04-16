@@ -6,6 +6,25 @@ continue to work by simply changing the API end point.  I have no plans to build
 replacement, just the backend API.  Once we have the Google Reader API working, we may be able
 to add extensions to it so that apps can add additional features that weren't previously possible.
 
+## Want to help?
+
+Get in touch on [Twitter](http://twitter.com/devongovett) or IRC (#reader on Freenode) 
+and let me know! :) Feel free to fork this repository and send pull requests implementing features.  Once you've sent a couple good ones, I'll add you as a contributor to the project to commit directly.
+
+Things to work on:
+
+* API endpoints - almost complete, only a few remaining unimplemented APIs and a few TODOs in the code.
+  See a list of what's done and what needs work [here](https://github.com/devongovett/reader/issues/5).
+* Testing - we could always use more of it
+* Feed fetching and storing - this is the major project to work on. It somewhat kind of works at this point, 
+  and it needs to be rock solid and battle tested with lots of real world feeds and situations, some of which are listed 
+  [here](https://docs.google.com/document/d/1cvq67iQpk2C7ufOsefsfKnGCXeUIv46NQHbnHkm8PtU/edit?usp=sharing).  The bug for discussion
+  is [here](https://github.com/devongovett/reader/issues/4).
+* etc. We are young!  See the [issues](https://github.com/devongovett/reader/issues) page for more info.
+
+Check out the [issues](https://github.com/devongovett/reader/issues) for more details.  If you're
+working on something, please mark it so we don't duplicate effort.
+
 ## Tech
 
 * [Node.js](http://nodejs.org/)
@@ -32,25 +51,6 @@ https://docs.google.com/document/d/1cvq67iQpk2C7ufOsefsfKnGCXeUIv46NQHbnHkm8PtU/
 
 A mailing list discussing the future of RSS syncing:
 http://lists.ranchero.com/listinfo.cgi/rss-sync-ranchero.com
-
-## Want to help?
-
-Get in touch on [Twitter](http://twitter.com/devongovett) or IRC (#reader on Freenode) 
-and let me know! :) Feel free to fork this repository and send pull requests implementing features.  Once you've sent a couple good ones, I'll add you as a contributor to the project to commit directly.
-
-Things to work on:
-
-* API endpoints - almost complete, only a few remaining unimplemented APIs and a few TODOs in the code.
-  See a list of what's done and what needs work [here](https://github.com/devongovett/reader/issues/5).
-* Testing - we could always use more of it
-* Feed fetching and storing - this is the major project to work on. It somewhat kind of works at this point, 
-  and it needs to be rock solid and battle tested with lots of real world feeds and situations, some of which are listed 
-  [here](https://docs.google.com/document/d/1cvq67iQpk2C7ufOsefsfKnGCXeUIv46NQHbnHkm8PtU/edit?usp=sharing).  The bug for discussion
-  is [here](https://github.com/devongovett/reader/issues/4).
-* etc. We are young!  See the [issues](https://github.com/devongovett/reader/issues) page for more info.
-
-Check out the [issues](https://github.com/devongovett/reader/issues) for more details.  If you're
-working on something, please mark it so we don't duplicate effort.
 
 ## Installation
 
