@@ -1,7 +1,6 @@
 var mongoose = require('mongoose'),
     rsvp = require('rsvp'),
-    Promise = rsvp.Promise,
-    async = require('async');
+    Promise = rsvp.Promise;
 
 require('./mongoose-promise');
 

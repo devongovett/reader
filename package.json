@@ -23,7 +23,6 @@
       "bignum": "0.6.x",
       "feedparser": "0.15.x",
       "kue": "0.6.x",
-      "async": "0.2.x",
       "rsvp": "1.x",
       "nock": "0.16.x",
       "redis": "0.8.x",
