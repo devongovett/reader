@@ -8,6 +8,7 @@ var db = require('./db'),
     Post = db.Post,
     kue = require('kue'),
     feedparser = require('feedparser'),
+    rsvp = require('rsvp'),
     jobs = kue.createQueue();
     
 var UPDATE_INTERVAL = 10 * 60 * 1000;
@@ -16,9 +17,8 @@ jobs.process('feed', 20, function(job, done) {
     Feed
     .findById(job.data.feedID)
     .populate('posts')
-    .exec(function(err, feed) {
-        if (err || !feed)
-            return done(err);
+    .then(function(feed) {
+        if (!feed) return done();
             
         var existingPosts = {};
         feed.posts.forEach(function(post) {
@@ -58,6 +58,7 @@ jobs.process('feed', 20, function(job, done) {
             }
         });
         
+        var posts = [];
         parser.on('article', function(post) {
             var guid = post.guid || post.link;
             
@@ -77,45 +78,49 @@ jobs.process('feed', 20, function(job, done) {
                 });
                 
                 feed.posts.push(post);
-                
-                waiting++;
-                post.save(end);
+                posts.push(post.save());
             }
             
             // TODO: check for updates to existing posts
             
         });
         
-        var waiting = 1;
         var parseError = false;
-        function end(err) {
-            if (!err && --waiting)
-                return;
-            
-            if (err) {
-                parser.removeAllListeners('article');
-                feed.failedCrawlTime = new Date();
-                feed.lastFailureWasParseFailure = parseError;
-            } else {
-                feed.successfulCrawlTime = new Date();
-            }
-            
-            feed.save(function(feedError) {
-                err || (err = feedError);
-                
-                // schedule the next fetch
-                jobs.create('feed', { feedID: feed.id})
-                    .delay(UPDATE_INTERVAL)
-                    .save(function(jobError) {
-                        done(err || jobError);
-                    });
-            });
-        }
-    
         parser.on('error', function(err) {
             parseError = true;
         });
         
-        parser.on('end', end);
-    });
+        parser.on('end', function() {            
+            // wait for posts to finish saving
+            // then mark crawl success or failure
+            rsvp.all(posts).then(function() {
+                feed.successfulCrawlTime = new Date();
+            }, function(err) {
+                parser.removeAllListeners('article');
+                feed.failedCrawlTime = new Date();
+                feed.lastFailureWasParseFailure = parseError;
+            }).then(function() {
+                // save the feed and create a new job
+                var feedPromise = feed.save();
+                var jobPromise = new rsvp.Promise;
+                
+                // schedule the next feed update
+                jobs.create('feed', { feedID: feed.id})
+                    .delay(UPDATE_INTERVAL)
+                    .save(function(err) {
+                        if (err)
+                            jobPromise.reject(err);
+                        else
+                            jobPromise.resolve();
+                    });
+                
+                return rsvp.all([
+                    feedPromise,
+                    jobPromise
+                ]);
+            }).then(function() {
+                done();
+            }, done);
+        });
+    }, done);
 });
