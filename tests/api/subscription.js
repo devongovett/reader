@@ -2,7 +2,13 @@ var QUnit = require('qunit-cli'),
     assert = QUnit.assert,
     nock = require('nock'),
     shared = require('../shared'),
+    fs = require('fs'),
     request = shared.request;
+    
+var host = 'http://example.com',
+    path = '/feed.xml',
+    url = host + path,
+    tests = __dirname + '/../test_data';
 
 QUnit.module('Subscription');
 
@@ -92,11 +98,6 @@ QUnit.asyncTest('invalid action', function() {
         a: 'user/' + shared.userID +  '/label/test'
     });
 });
-
-var host = 'http://example.com',
-    path = '/feed.xml',
-    url = host + path,
-    tests = __dirname + '/../test_data';
 
 QUnit.asyncTest('subscribe', function() {
     nock(host)
@@ -245,92 +246,6 @@ QUnit.asyncTest('quickadd invalid', function() {
     });
 });
 
-QUnit.asyncTest('subscription list', function() {
-    request(shared.api + '/subscription/list', function(err, res, body) {
-        assert.equal(res.statusCode, 200);
-        assert.ok(/json/.test(res.headers['content-type']));
-        
-        body = JSON.parse(body);
-        
-        // the results can come back in different orders, so sort them
-        body.subscriptions.sort(function(a, b) {
-            return a.id <= b.id ? -1 : 1;
-        }).forEach(function(sub) {
-            sub.categories.sort(function(a, b) {
-                return a.label <= b.label ? -1 : 1;
-            });
-            
-            // test sortids
-            assert.equal(typeof sub.sortid, 'string');
-            assert.equal(sub.sortid.length, 8);
-            assert.ok(/[0-9A-F]/i.test(sub.sortid));
-            delete sub.sortid;
-        });
-        
-        assert.deepEqual(body, {
-            subscriptions: [{
-                id: 'feed/http://example.com/feed.xml',
-                title: 'Test Blog',
-                firstitemmsec: 0,
-                categories: [{
-                    id: 'user/' + shared.userID + '/label/foo',
-                    label: 'foo'
-                }, {
-                    id: 'user/' + shared.userID + '/label/test',
-                    label: 'test'
-                }]
-            }, {
-                id: 'feed/http://example.com/feed1.xml',
-                title: 'Edited title',
-                firstitemmsec: 0,
-                categories: [{
-                    id: 'user/' + shared.userID + '/label/bar',
-                    label: 'bar'
-                }]
-            }, {
-                id: 'feed/http://example.com/feed2.xml',
-                title: 'Test Blog',
-                firstitemmsec: 0,
-                categories: [{
-                    id: 'user/' + shared.userID + '/label/bar',
-                    label: 'bar'
-                }]
-            }, {
-                id: 'feed/http://example.com/feed3.xml',
-                title: 'Test Blog',
-                firstitemmsec: 0,
-                categories: []
-            }]
-        });
-        
-        QUnit.start();
-    });
-});
-
-QUnit.asyncTest('subscribed', function() {
-    request(shared.api + '/subscribed?s=feed/http://example.com/feed1.xml', function(err, res, body) {
-        assert.equal(res.statusCode, 200);
-        assert.equal(body, 'true');
-        QUnit.start();
-    });
-});
-
-QUnit.asyncTest('subscribed invalid', function() {
-    request(shared.api + '/subscribed?s=feed/invalid', function(err, res, body) {
-        assert.equal(res.statusCode, 400);
-        assert.equal(body, 'Error=InvalidStream');
-        QUnit.start();
-    });
-});
-
-QUnit.asyncTest('subscribed unknown', function() {
-    request(shared.api + '/subscribed?s=feed/http://unknown.com/', function(err, res, body) {
-        assert.equal(res.statusCode, 200);
-        assert.equal(body, 'false');
-        QUnit.start();
-    });
-});
-
 QUnit.asyncTest('subscription OPML import unauthenticated', function() {
     var form = request.post(shared.server + '/reader/subscriptions/import', { headers: {}}, function(err, res, body) {
         assert.equal(res.statusCode, 401);
@@ -437,56 +352,223 @@ QUnit.asyncTest('subscription OPML import', function() {
     });
 });
 
-// TODO: test importing actual OPML files
-
-QUnit.asyncTest('subscription OPML export', function() {
-    request(shared.server + '/reader/subscriptions/export', function(err, res, body) {
+QUnit.asyncTest('subscription OPML import', function() {
+    nock('http://example.com/')
+        .get('/opml.xml')
+        .replyWithFile(200, tests + '/old.xml');
+    
+    // subscribes to one new feed and one existing feed, in the "OPML Folder" tag, and sets their titles
+    var form = request.post(shared.server + '/reader/subscriptions/import', function(err, res, body) {
         assert.equal(res.statusCode, 200);
-        assert.ok(/xml/.test(res.headers['content-type']));
+        assert.equal(body, 'OK');
+        QUnit.start();
+    }).form();
+    
+    form.append('T', shared.token);
+    form.append('action', 'opml-upload');
+    form.append('opml-file', fs.createReadStream(tests + '/test.opml'), {
+        header: '--' + form.getBoundary() + '\r\n' +
+                'Content-Disposition: form-data; name="opml-file"; filename="test.opml"\r\n' +
+                'Content-Type: text/xml\r\n\r\n'
+    });
+});
+
+QUnit.asyncTest('subscription list', function() {
+    request(shared.api + '/subscription/list', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.ok(/json/.test(res.headers['content-type']));
         
-        // we can't just do a straight compare because the feeds may be in a different order
-        // TODO: this is pretty hacky. there is probably a better way
-        var lines = body.split('\n');
-        assert.equal(20, lines.length);
+        body = JSON.parse(body);
         
-        assert.deepEqual(lines.slice(0, 6), [
-            '<?xml version="1.0" encoding="UTF-8"?>',
-            '<opml version="1.0">',
-            '  <head>',
-            '    <title>test subscriptions</title>',
-            '  </head>',
-            '  <body>'
-        ]);
+        // the results can come back in different orders, so sort them
+        body.subscriptions.sort(function(a, b) {
+            return a.id <= b.id ? -1 : 1;
+        }).forEach(function(sub) {
+            sub.categories.sort(function(a, b) {
+                return a.label <= b.label ? -1 : 1;
+            });
+            
+            // test sortids
+            assert.equal(typeof sub.sortid, 'string');
+            assert.equal(sub.sortid.length, 8);
+            assert.ok(/[0-9A-F]/i.test(sub.sortid));
+            delete sub.sortid;
+        });
         
-        assert.ok(~body.indexOf([
-            '    <outline title="foo" text="foo">',
-            '      <outline text="Test Blog" title="Test Blog" type="rss" xmlUrl="http://example.com/feed.xml" htmlUrl="http://example.com/"/>',
-            '    </outline>'
-        ].join('\n')));
-        
-        assert.ok(~body.indexOf([
-            '    <outline title="test" text="test">',
-            '      <outline text="Test Blog" title="Test Blog" type="rss" xmlUrl="http://example.com/feed.xml" htmlUrl="http://example.com/"/>',
-            '    </outline>',
-        ].join('\n')));
-        
-        assert.ok(~body.indexOf([
-            '    <outline title="bar" text="bar">',
-            '      <outline text="Edited title" title="Edited title" type="rss" xmlUrl="http://example.com/feed1.xml" htmlUrl="http://example.com/"/>',
-            '      <outline text="Test Blog" title="Test Blog" type="rss" xmlUrl="http://example.com/feed2.xml" htmlUrl="http://example.com/"/>',
-            '    </outline>',
-        ].join('\n')));
-        
-        assert.ok(~body.indexOf(
-            '    <outline text="Test Blog" title="Test Blog" type="rss" xmlUrl="http://example.com/feed3.xml" htmlUrl="http://example.com/"/>'
-        ));
-        
-        assert.deepEqual(lines.slice(17), [
-            '  </body>',
-            '</opml>',
-            ''
-        ]);
+        assert.deepEqual(body, {
+            subscriptions: [{
+                id: 'feed/http://example.com/feed.xml',
+                title: 'Test Blog',
+                firstitemmsec: 0,
+                categories: [{
+                    id: 'user/' + shared.userID + '/label/foo',
+                    label: 'foo'
+                }, {
+                    id: 'user/' + shared.userID + '/label/test',
+                    label: 'test'
+                }]
+            }, {
+                id: 'feed/http://example.com/feed1.xml',
+                title: 'Edited title',
+                firstitemmsec: 0,
+                categories: [{
+                    id: 'user/' + shared.userID + '/label/bar',
+                    label: 'bar'
+                }]
+            }, {
+                id: 'feed/http://example.com/feed2.xml',
+                title: 'OPML Feed 2',
+                firstitemmsec: 0,
+                categories: [{
+                    id: 'user/' + shared.userID + '/label/OPML Folder',
+                    label: 'OPML Folder'
+                }, {
+                    id: 'user/' + shared.userID + '/label/bar',
+                    label: 'bar'
+                }]
+            }, {
+                id: 'feed/http://example.com/feed3.xml',
+                title: 'Test Blog',
+                firstitemmsec: 0,
+                categories: []
+            }, {
+                id: 'feed/http://example.com/opml.xml',
+                title: 'OPML Feed 1',
+                firstitemmsec: 0,
+                categories: [{
+                    id: 'user/' + shared.userID + '/label/OPML Folder',
+                    label: 'OPML Folder'
+                }]
+            }]
+        });
         
         QUnit.start();
     });
+});
+
+QUnit.asyncTest('subscribed', function() {
+    request(shared.api + '/subscribed?s=feed/http://example.com/feed1.xml', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.equal(body, 'true');
+        QUnit.start();
+    });
+});
+
+QUnit.asyncTest('subscribed invalid', function() {
+    request(shared.api + '/subscribed?s=feed/invalid', function(err, res, body) {
+        assert.equal(res.statusCode, 400);
+        assert.equal(body, 'Error=InvalidStream');
+        QUnit.start();
+    });
+});
+
+QUnit.asyncTest('subscribed unknown', function() {
+    request(shared.api + '/subscribed?s=feed/http://unknown.com/', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.equal(body, 'false');
+        QUnit.start();
+    });
+});
+
+QUnit.asyncTest('subscription OPML export', function() {
+    var OPMLParser = require('opmlparser');
+    
+    request(shared.server + '/reader/subscriptions/export')
+        .on('response', function(res) {
+            assert.equal(res.statusCode, 200);
+            assert.equal(res.headers['content-type'], 'text/xml; charset=UTF-8');
+            
+            // doesn't exactly match Google Reader. they have no quotes or space after ;, but I think this should still work
+            assert.equal(res.headers['content-disposition'], 'attachment; filename="google-reader-subscriptions.xml"');
+        })
+        .pipe(new OPMLParser({ addmeta: false }))
+        .on('error', function(err) {
+            assert.ok(false, 'OPML parse error');
+        })
+        .on('meta', function(meta) {
+            assert.equal(meta.title, 'test subscriptions');
+            assert.equal(meta['#version'], '1.0');
+        })
+        .on('outline', function(outline) {
+            // sort the feeds and folders so we can compare them reliably
+            outline.sort(function(a, b) {
+                return a.title < b.title ? -1 : 1;
+            }).forEach(function(n) {
+                if (n.outline) {
+                    n.outline.sort(function(a, b) {
+                        return a.title < b.title ? -1 : 1;
+                    });
+                }
+            });
+            
+            assert.deepEqual(outline, [{
+                title: 'OPML Folder',
+                text: 'OPML Folder',
+                outline: [{
+                    text: 'OPML Feed 1',
+                    title: 'OPML Feed 1',
+                    type: 'rss',
+                    xmlurl: 'http://example.com/opml.xml',
+                    htmlurl: 'http://example.com/',
+                    folder: 'OPML Folder'
+                }, {
+                    text: 'OPML Feed 2',
+                    title: 'OPML Feed 2',
+                    type: 'rss',
+                    xmlurl: 'http://example.com/feed2.xml',
+                    htmlurl: 'http://example.com/',
+                    folder: 'OPML Folder'
+                }]
+            }, {
+                text: 'Test Blog',
+                title: 'Test Blog',
+                type: 'rss',
+                xmlurl: 'http://example.com/feed3.xml',
+                htmlurl: 'http://example.com/',
+                folder: ''
+            }, {
+                title: 'bar',
+                text: 'bar',
+                outline: [{
+                    text: 'Edited title',
+                    title: 'Edited title',
+                    type: 'rss',
+                    xmlurl: 'http://example.com/feed1.xml',
+                    htmlurl: 'http://example.com/',
+                    folder: 'bar'
+                }, {
+                    text: 'OPML Feed 2',
+                    title: 'OPML Feed 2',
+                    type: 'rss',
+                    xmlurl: 'http://example.com/feed2.xml',
+                    htmlurl: 'http://example.com/',
+                    folder: 'bar'
+                }]
+            }, {
+                title: 'foo',
+                text: 'foo',
+                outline: [{
+                    text: 'Test Blog',
+                    title: 'Test Blog',
+                    type: 'rss',
+                    xmlurl: 'http://example.com/feed.xml',
+                    htmlurl: 'http://example.com/',
+                    folder: 'foo'
+                }]
+            }, {
+                title: 'test',
+                text: 'test',
+                outline: [{
+                    text: 'Test Blog',
+                    title: 'Test Blog',
+                    type: 'rss',
+                    xmlurl: 'http://example.com/feed.xml',
+                    htmlurl: 'http://example.com/',
+                    folder: 'test'
+                }]
+            }])
+        })
+        .on('end', function() {
+            QUnit.start();
+        });
 });

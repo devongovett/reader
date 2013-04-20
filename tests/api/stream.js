@@ -217,7 +217,7 @@ QUnit.asyncTest('item ids tag', function() {
         body = JSON.parse(body);
         assert.equal(typeof body.continuation, 'string');
         assert.ok(Array.isArray(body.itemRefs));
-        assert.equal(body.itemRefs.length, 16);
+        assert.equal(body.itemRefs.length, 19);
         
         var lastTimestamp =Infinity;
         body.itemRefs.forEach(function(post) {
@@ -265,7 +265,7 @@ QUnit.asyncTest('item ids tag exclude item tag', function() {
         body = JSON.parse(body);
         assert.equal(typeof body.continuation, 'string');
         assert.ok(Array.isArray(body.itemRefs));
-        assert.equal(body.itemRefs.length, 10);
+        assert.equal(body.itemRefs.length, 13);
         
         var lastTimestamp = Infinity;
         body.itemRefs.forEach(function(post) {
@@ -289,7 +289,7 @@ QUnit.asyncTest('item ids tag exclude feed tag', function() {
         body = JSON.parse(body);
         assert.equal(typeof body.continuation, 'string');
         assert.ok(Array.isArray(body.itemRefs));
-        assert.equal(body.itemRefs.length, 6);
+        assert.equal(body.itemRefs.length, 9);
         
         var lastTimestamp = Infinity;
         body.itemRefs.forEach(function(post) {
@@ -324,7 +324,7 @@ QUnit.asyncTest('item count feed', function() {
 QUnit.asyncTest('item count tag', function() {
     request(shared.api + '/stream/items/count?s=user/-/state/com.google/reading-list', function(err, res, body) {
         assert.equal(res.statusCode, 200);
-        assert.equal(body, '16');
+        assert.equal(body, '19');
         QUnit.start();
     });
 });
@@ -554,7 +554,7 @@ QUnit.asyncTest('item stream contents', function() {
         // assert.deepEqual(body.alternate, [{ href: 'http://example.com/', type: 'text/html' }]);
         assert.equal(typeof body.updated, 'number');
         assert.ok(Array.isArray(body.items));
-        assert.equal(body.items.length, 16);
+        assert.equal(body.items.length, 19);
         
         var lastPublished = Infinity;
         body.items.forEach(function(item) {
@@ -602,7 +602,7 @@ QUnit.asyncTest('item stream contents default count', function() {
         assert.deepEqual(body.self, [{ href: url }]);
         assert.equal(typeof body.updated, 'number');
         assert.ok(Array.isArray(body.items));
-        assert.equal(body.items.length, 16);
+        assert.equal(body.items.length, 19);
         
         var lastPublished = Infinity;
         body.items.forEach(function(item) {

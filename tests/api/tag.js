@@ -149,6 +149,7 @@ QUnit.asyncTest('list tags', function() {
         // assume that the subscription tests have already run
         assert.deepEqual(body, {
             tags: [
+                { id: 'user/' + shared.userID + '/label/OPML Folder' },
                 { id: 'user/' + shared.userID + '/label/bar' },
                 { id: 'user/' + shared.userID + '/label/baz' },
                 { id: 'user/' + shared.userID + '/label/folder1' },
@@ -176,10 +177,18 @@ QUnit.asyncTest('unread count', function() {
             unreadcounts: [{
                 id: 'feed/http://example.com/feed1.xml',
                 count: 5,
-                newestItemTimestampUsec: 0
+                newestItemTimestampUsec: 0 // TODO
             }, {
                 id: 'feed/http://example.com/feed2.xml',
                 count: 5,
+                newestItemTimestampUsec: 0
+            }, {
+                id: 'feed/http://example.com/opml.xml',
+                count: 3,
+                newestItemTimestampUsec: 0
+            }, {
+                id: 'user/' + shared.userID + '/label/OPML Folder',
+                count: 8,
                 newestItemTimestampUsec: 0
             }, {
                 id: 'user/' + shared.userID + '/label/bar',
@@ -187,7 +196,7 @@ QUnit.asyncTest('unread count', function() {
                 newestItemTimestampUsec: 0
             }, {
                 id: 'user/' + shared.userID + '/state/com.google/reading-list',
-                count: 10,
+                count: 13,
                 newestItemTimestampUsec: 0
             }]
         });

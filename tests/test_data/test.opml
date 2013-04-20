@@ -1,0 +1,12 @@
+<opml version="1.1">
+<head>
+    <title>Test OPML Import</title>
+</head>
+<body>
+    <!-- test subscribing to one new feed and one existing feed, and adding a folder -->
+    <outline text="OPML Folder">
+        <outline text="OPML Feed 1" title="OPML Feed 1" type="rss" xmlUrl="http://example.com/opml.xml"/>
+        <outline text="OPML Feed 2" title="OPML Feed 2" type="rss" xmlUrl="http://example.com/feed2.xml"/>
+    </outline>
+</body>
+</opml>
