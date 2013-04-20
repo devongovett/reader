@@ -1,6 +1,8 @@
 var express = require('express'),
     rsvp = require('rsvp'),
     xml = require('libxmljs'),
+    fs = require('fs'),
+    opmlparser = require('opmlparser'),
     db = require('../db'),
     utils = require('../utils'),
     kue = require('kue'),
@@ -245,6 +247,46 @@ app.get('/reader/subscriptions/export', function(req, res) {
     });
 });
 
-app.get('/reader/subscriptions/import', function(req, res) {
-    // TODO: import OPML
+app.post('/reader/subscriptions/import', function(req, res) {
+    if (!utils.checkAuth(req, res, true))
+        return;
+
+    if (req.body.action != 'opml-upload')
+        return res.send(400, 'Error=UnknownAction');
+
+    if (!req.files.hasOwnProperty('opml-file'))
+        return res.send(400, 'Error=Unknown');
+
+    fs.createReadStream(req.files['opml-file'].path)
+        .pipe(new opmlparser({ addmeta: false }))
+        .on('error', function(error) {
+            res.send(400, 'Error=Unknown');
+        })
+        .on('outline', function(outline) {
+            if (!Array.isArray(outline)) {
+                res.send('OK');
+                return;
+            }
+
+            var subscriptions = [];
+            outline.forEach(function(group) {
+                group.outline.forEach(function(feed) {
+                    if (feed.type != 'rss')
+                        return;
+                    if (!utils.isUrl(feed.xmlurl))
+                        return;
+                    subscriptions.push(actions.subscribe({
+                        user: req.user,
+                        addTags: utils.parseTags('user/-/label/' + feed.folder, req.user),
+                        title: feed.title
+                    }, feed.xmlurl));
+                });
+            });
+
+            rsvp.all(subscriptions).then(function() {
+                res.send('OK');
+            }, function(err) {
+                res.send(500, 'Error=Unknown');
+            });
+        });
 });

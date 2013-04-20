@@ -100,6 +100,10 @@ exports.isEmail = function(email) {
     return !!validator.check(email).isEmail();
 };
 
+exports.isUrl = function(url) {
+    return !!validator.check(url).isUrl();
+};
+
 exports.parseTags = function(tags, user) {
     if (!tags)
         return null;

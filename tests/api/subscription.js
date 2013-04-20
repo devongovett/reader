@@ -331,6 +331,105 @@ QUnit.asyncTest('subscribed unknown', function() {
     });
 });
 
+QUnit.asyncTest('subscription OPML import unauthenticated', function() {
+    var form = request.post(shared.server + '/reader/subscriptions/import', { headers: {}}, function(err, res, body) {
+        assert.equal(res.statusCode, 401);
+        assert.equal(body, 'Error=AuthRequired');
+        QUnit.start();
+    }).form();
+    form.append('T', shared.token);
+    form.append('action', 'opml-upload');
+    form.append('opml-file', '', {
+        header: '--' + form.getBoundary() + '\r\n' +
+        'Content-Disposition: form-data; name="opml-file"; filename="file.xml"\r\n' +
+        'Content-Type: text/xml\r\n\r\n'
+    });
+});
+
+QUnit.asyncTest('subscription OPML import missing token', function() {
+    var form = request.post(shared.server + '/reader/subscriptions/import', function(err, res, body) {
+        assert.equal(res.statusCode, 400);
+        assert.equal(body, 'Error=InvalidToken');
+        QUnit.start();
+    }).form();
+    form.append('action', 'opml-upload');
+    form.append('opml-file', '', {
+        header: '--' + form.getBoundary() + '\r\n' +
+        'Content-Disposition: form-data; name="opml-file"; filename="file.xml"\r\n' +
+        'Content-Type: text/xml\r\n\r\n'
+    });
+});
+
+QUnit.asyncTest('subscription OPML import invalid token', function() {
+    var form = request.post(shared.server + '/reader/subscriptions/import', function(err, res, body) {
+        assert.equal(res.statusCode, 400);
+        assert.equal(body, 'Error=InvalidToken');
+        QUnit.start();
+    }).form();
+    form.append('T', 'invalid');
+    form.append('action', 'opml-upload');
+    form.append('opml-file', '', {
+        header: '--' + form.getBoundary() + '\r\n' +
+        'Content-Disposition: form-data; name="opml-file"; filename="file.xml"\r\n' +
+        'Content-Type: text/xml\r\n\r\n'
+    });
+});
+
+QUnit.asyncTest('subscription OPML import invalid action', function() {
+    var form = request.post(shared.server + '/reader/subscriptions/import', function(err, res, body) {
+        assert.equal(res.statusCode, 400);
+        assert.equal(body, 'Error=UnknownAction');
+        QUnit.start();
+    }).form();
+    form.append('T', shared.token);
+    form.append('action', 'invalid');
+    form.append('opml-file', '', {
+        header: '--' + form.getBoundary() + '\r\n' +
+        'Content-Disposition: form-data; name="opml-file"; filename="file.xml"\r\n' +
+        'Content-Type: text/xml\r\n\r\n'
+    });
+});
+
+QUnit.asyncTest('subscription OPML import missing file', function() {
+    var form = request.post(shared.server + '/reader/subscriptions/import', function(err, res, body) {
+        assert.equal(res.statusCode, 400);
+        assert.equal(body, 'Error=Unknown');
+        QUnit.start();
+    }).form();
+    form.append('T', shared.token);
+    form.append('action', 'opml-upload');
+});
+
+QUnit.asyncTest('subscription OPML import invalid file', function() {
+    var form = request.post(shared.server + '/reader/subscriptions/import', function(err, res, body) {
+        assert.equal(res.statusCode, 400);
+        assert.equal(body, 'Error=Unknown');
+        QUnit.start();
+    }).form();
+    form.append('T', shared.token);
+    form.append('action', 'opml-upload');
+    form.append('opml-file', '', {
+        header: '--' + form.getBoundary() + '\r\n' +
+        'Content-Disposition: form-data; name="opml-file"; filename="file.xml"\r\n' +
+        'Content-Type: text/xml\r\n\r\n'
+    });
+});
+
+QUnit.asyncTest('subscription OPML import', function() {
+    var form = request.post(shared.server + '/reader/subscriptions/import', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.equal(body, 'OK');
+        QUnit.start();
+    }).form();
+    form.append('T', shared.token);
+    form.append('action', 'opml-upload');
+    form.append('opml-file', '<opml version="1.0"></opml>', {
+        header: '--' + form.getBoundary() + '\r\n' +
+        'Content-Disposition: form-data; name="opml-file"; filename="file.xml"\r\n' +
+        'Content-Type: text/xml\r\n\r\n'
+    });
+});
+
 QUnit.asyncTest('subscription OPML export', function() {
     request(shared.server + '/reader/subscriptions/export', function(err, res, body) {
         assert.equal(res.statusCode, 200);
