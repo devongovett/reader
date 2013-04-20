@@ -2,7 +2,7 @@ var express = require('express'),
     rsvp = require('rsvp'),
     xml = require('libxmljs'),
     fs = require('fs'),
-    opmlparser = require('opmlparser'),
+    OPMLParser = require('opmlparser'),
     db = require('../db'),
     utils = require('../utils'),
     kue = require('kue'),
@@ -251,33 +251,33 @@ app.post('/reader/subscriptions/import', function(req, res) {
     if (!utils.checkAuth(req, res, true))
         return;
 
-    if (req.body.action != 'opml-upload')
+    if (req.body.action !== 'opml-upload')
         return res.send(400, 'Error=UnknownAction');
 
-    if (!req.files.hasOwnProperty('opml-file'))
-        return res.send(400, 'Error=Unknown');
+    if (!req.files['opml-file'])
+        return res.send(400, 'Error=MissingFile');
 
     fs.createReadStream(req.files['opml-file'].path)
-        .pipe(new opmlparser({ addmeta: false }))
+        .pipe(new OPMLParser({ addmeta: false }))
         .on('error', function(error) {
             res.send(400, 'Error=Unknown');
         })
         .on('outline', function(outline) {
-            if (!Array.isArray(outline)) {
-                res.send('OK');
-                return;
-            }
+            if (!Array.isArray(outline))
+                return res.send('OK'); // TODO: confirm
 
             var subscriptions = [];
             outline.forEach(function(group) {
                 group.outline.forEach(function(feed) {
-                    if (feed.type != 'rss')
-                        return;
+                    if (feed.type !== 'rss')
+                        return; // TODO: handle?
+                        
                     if (!utils.isUrl(feed.xmlurl))
                         return;
+                        
                     subscriptions.push(actions.subscribe({
                         user: req.user,
-                        addTags: utils.parseTags('user/-/label/' + feed.folder, req.user),
+                        addTags: utils.parseTags('user/-/label/' + feed.folder, req.user),  // TODO: what if feed.folder is empty?
                         title: feed.title
                     }, feed.xmlurl));
                 });
