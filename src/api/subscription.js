@@ -264,7 +264,7 @@ app.post('/reader/subscriptions/import', function(req, res) {
         })
         .on('outline', function(outline) {
             if (!Array.isArray(outline))
-                return res.send('OK'); // TODO: confirm
+                return res.send('OK');
 
             var subscriptions = [];
             outline.forEach(function(group) {
