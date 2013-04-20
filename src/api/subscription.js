@@ -240,7 +240,9 @@ app.get('/reader/subscriptions/export', function(req, res) {
             }
         });
         
-        res.type('xml').send(doc.toString());
+        res.attachment('google-reader-subscriptions.xml')
+           .type('text/xml; charset=UTF-8')
+           .send(doc.toString());
         
     }, function(err) {
         res.send(500, 'Error=Unknown');
