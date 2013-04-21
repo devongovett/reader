@@ -12,6 +12,8 @@ var db = require('./db'),
     jobs = kue.createQueue();
     
 var UPDATE_INTERVAL = 10 * 60 * 1000;
+
+db.connect();
     
 jobs.process('feed', 20, function(job, done) {
     Feed
@@ -124,3 +126,5 @@ jobs.process('feed', 20, function(job, done) {
         });
     }, done);
 });
+
+jobs.promote();
