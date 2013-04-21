@@ -27,7 +27,7 @@ working on something, please mark it so we don't duplicate effort.
 
 ## Design Documentation
 
-If you're interested in contributing and don't quite know where to begin, you should read the [design documentation](https://github.com/devongovett/reader/wiki/Design-Documentation) on the wiki which explains the overall archetecture of the project.  If you think something is missing from that page, don't hesitate to file an issue or hop in the #reader IRC channel on Freenode to ask questions!
+If you're interested in contributing and don't quite know where to begin, you should read the [design documentation](https://github.com/devongovett/reader/wiki/Design-Documentation) on the wiki which explains the overall architecture of the project.  If you think something is missing from that page, don't hesitate to file an issue or hop in the #reader IRC channel on Freenode to ask questions!
 
 ## Tech
 
