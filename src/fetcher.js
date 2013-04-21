@@ -8,14 +8,19 @@ var db = require('./db'),
     Post = db.Post,
     kue = require('kue'),
     feedparser = require('feedparser'),
-    rsvp = require('rsvp'),
-    jobs = kue.createQueue();
+    rsvp = require('rsvp');
     
-var UPDATE_INTERVAL = 10 * 60 * 1000;
+const UPDATE_INTERVAL = 10 * 60 * 1000;
+const PARALLEL_JOBS = 20;
 
+// connect to the database
 db.connect();
+
+// setup the job queue
+var jobs = kue.createQueue();
+jobs.promote();
     
-jobs.process('feed', 20, function(job, done) {
+jobs.process('feed', PARALLEL_JOBS, function(job, done) {
     Feed
     .findById(job.data.feedID)
     .populate('posts')
@@ -126,5 +131,3 @@ jobs.process('feed', 20, function(job, done) {
         });
     }, done);
 });
-
-jobs.promote();
