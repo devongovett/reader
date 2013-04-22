@@ -269,12 +269,19 @@ app.post('/reader/subscriptions/import', function(req, res) {
                 return res.send('OK');
 
             var subscriptions = [];
-            outline.forEach(function(group) {
-                group.outline.forEach(function(feed) {
-                    if (feed.type !== 'rss')
-                        return; // TODO: handle?
-                        
-                    if (!utils.isUrl(feed.xmlurl))
+            outline.forEach(function(item) {
+                // if this is a feed that isn't in a folder, add it directly
+                if (!item.outline) {
+                    subscriptions.push(actions.subscribe({
+                        user: req.user,
+                        title: item.title
+                    }, item.xmlurl));
+                    return;
+                }
+                
+                // otherwise, add the items in the folder
+                item.outline.forEach(function(feed) {
+                    if (feed.type !== 'rss' || !utils.isUrl(feed.xmlurl))
                         return;
                         
                     subscriptions.push(actions.subscribe({

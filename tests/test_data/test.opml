@@ -8,5 +8,6 @@
         <outline text="OPML Feed 1" title="OPML Feed 1" type="rss" xmlUrl="http://example.com/opml.xml"/>
         <outline text="OPML Feed 2" title="OPML Feed 2" type="rss" xmlUrl="http://example.com/feed2.xml"/>
     </outline>
+    <outline text="OPML Feed 3" title="OPML Feed 3" type="rss" xmlUrl="http://example.com/feed3.xml"/>
 </body>
 </opml>

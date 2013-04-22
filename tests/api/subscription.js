@@ -428,7 +428,7 @@ QUnit.asyncTest('subscription list', function() {
                 }]
             }, {
                 id: 'feed/http://example.com/feed3.xml',
-                title: 'Test Blog',
+                title: 'OPML Feed 3',
                 firstitemmsec: 0,
                 categories: []
             }, {
@@ -502,6 +502,13 @@ QUnit.asyncTest('subscription OPML export', function() {
             });
             
             assert.deepEqual(outline, [{
+                text: 'OPML Feed 3',
+                title: 'OPML Feed 3',
+                type: 'rss',
+                xmlurl: 'http://example.com/feed3.xml',
+                htmlurl: 'http://example.com/',
+                folder: ''
+            }, {
                 title: 'OPML Folder',
                 text: 'OPML Folder',
                 outline: [{
@@ -519,13 +526,6 @@ QUnit.asyncTest('subscription OPML export', function() {
                     htmlurl: 'http://example.com/',
                     folder: 'OPML Folder'
                 }]
-            }, {
-                text: 'Test Blog',
-                title: 'Test Blog',
-                type: 'rss',
-                xmlurl: 'http://example.com/feed3.xml',
-                htmlurl: 'http://example.com/',
-                folder: ''
             }, {
                 title: 'bar',
                 text: 'bar',
