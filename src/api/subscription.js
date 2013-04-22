@@ -279,7 +279,7 @@ app.post('/reader/subscriptions/import', function(req, res) {
                         
                     subscriptions.push(actions.subscribe({
                         user: req.user,
-                        addTags: utils.parseTags('user/-/label/' + feed.folder, req.user),  // TODO: what if feed.folder is empty?
+                        addTags: [{ user: req.user, type: 'label', name: feed.folder }],
                         title: feed.title
                     }, feed.xmlurl));
                 });
