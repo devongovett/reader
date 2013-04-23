@@ -262,7 +262,7 @@ app.post('/reader/subscriptions/import', function(req, res) {
     fs.createReadStream(req.files['opml-file'].path)
         .pipe(new OPMLParser({ addmeta: false }))
         .on('error', function(error) {
-            res.send(400, 'Error=Unknown');
+            res.send(400, 'Error=InvalidOPML');
         })
         .on('outline', function(outline) {
             if (!Array.isArray(outline))

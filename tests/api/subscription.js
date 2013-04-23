@@ -323,7 +323,7 @@ QUnit.asyncTest('subscription OPML import missing file', function() {
 QUnit.asyncTest('subscription OPML import invalid file', function() {
     var form = request.post(shared.server + '/reader/subscriptions/import', function(err, res, body) {
         assert.equal(res.statusCode, 400);
-        assert.equal(body, 'Error=Unknown');
+        assert.equal(body, 'Error=InvalidOPML');
         QUnit.start();
     }).form();
     
