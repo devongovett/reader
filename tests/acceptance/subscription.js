@@ -6,10 +6,10 @@ var QUnit = require('qunit-cli'),
     request = shared.request;
 
 // Google reader requires some time between requests??? UGH
-var start = QUnit.start.bind(QUnit);
-QUnit.start = function() {
-    setTimeout(start, 1000);
-}
+// var start = QUnit.start.bind(QUnit);
+// QUnit.start = function() {
+//     setTimeout(start, 1000);
+// }
     
 QUnit.module('Subscription');
     
@@ -230,5 +230,60 @@ QUnit.asyncTest('quickadd invalid', function() {
     }).form({ 
         quickadd: 'invalid',
         T: shared.token
+    });
+});
+
+QUnit.asyncTest('subscription list', function() {
+    request(settings.api + '/subscription/list?output=json', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        // assert.ok(/json/.test(res.headers['content-type']));
+        
+        body = JSON.parse(body);
+        
+        // the results can come back in different orders, so sort them
+        body.subscriptions.sort(function(a, b) {
+            return a.id <= b.id ? -1 : 1;
+        }).forEach(function(sub) {
+            sub.categories.sort(function(a, b) {
+                return a.label <= b.label ? -1 : 1;
+            });
+            
+            // test sortids
+            assert.equal(typeof sub.sortid, 'string');
+            assert.equal(sub.sortid.length, 8);
+            assert.ok(/^[0-9A-F]+$/i.test(sub.sortid));
+            delete sub.sortid;
+            
+            // test firstitemmsec
+            assert.equal(typeof sub.firstitemmsec, 'string');
+            assert.ok(/^[0-9]+$/.test(sub.firstitemmsec));
+            delete sub.firstitemmsec;
+        });
+        
+        assert.deepEqual(body, {
+            subscriptions: [{
+                id: 'feed/http://daringfireball.net/index.xml',
+                title: 'Edited title',
+                htmlUrl: 'http://daringfireball.net/',
+                categories: [
+                    { id: 'user/' + shared.userID + '/label/bar', label: 'bar' }
+                ]
+            }, {
+                id: 'feed/http://rss.nytimes.com/services/xml/rss/nyt/GlobalHome.xml',
+                title: 'NYT > Global Home',
+                htmlUrl: 'http://www.nytimes.com/pages/global/index.html?partner=rss&emc=rss',
+                categories: [
+                    { id: 'user/16672783126546743526/label/foo', label: 'foo' },
+                    { id: 'user/16672783126546743526/label/test', label: 'test' }
+                ]
+            }, {
+                id: 'feed/https://www.apple.com/main/rss/hotnews/hotnews.rss',
+                title: 'Apple Hot News',
+                categories: [],
+                htmlUrl: 'http://www.apple.com/hotnews/'
+            }]
+        });
+        
+        QUnit.start();
     });
 });
