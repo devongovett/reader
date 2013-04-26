@@ -2,14 +2,7 @@ var QUnit = require('qunit-cli'),
     assert = QUnit.assert,
     shared = require('../shared'),
     settings = require('./settings'),
-    fs = require('fs'),
     request = shared.request;
-
-// Google reader requires some time between requests??? UGH
-// var start = QUnit.start.bind(QUnit);
-// QUnit.start = function() {
-//     setTimeout(start, 1000);
-// }
     
 QUnit.module('Subscription');
     
@@ -293,6 +286,29 @@ QUnit.asyncTest('subscription list', function() {
             }]
         });
         
+        QUnit.start();
+    });
+});
+
+QUnit.asyncTest('subscribed', function() {
+    request(settings.api + '/subscribed?s=' + FEED1, function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.equal(body, 'true');
+        QUnit.start();
+    });
+});
+
+QUnit.asyncTest('subscribed invalid', function() {
+    request(settings.api + '/subscribed?s=feed/invalid', function(err, res, body) {
+        assert.equal(res.statusCode, 400);
+        QUnit.start();
+    });
+});
+
+QUnit.asyncTest('subscribed unknown', function() {
+    request(settings.api + '/subscribed?s=feed/http://unknown.com/', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.equal(body, 'false');
         QUnit.start();
     });
 });
