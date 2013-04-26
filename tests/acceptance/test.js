@@ -1,6 +1,7 @@
 var QUnit = require('qunit-cli'),
     assert = QUnit.assert,
     fs = require('fs'),
+    xml = require('libxmljs'),
     shared = require('../shared'),
     request = shared.request,
     settings = require('./settings');
@@ -95,6 +96,34 @@ QUnit.asyncTest('user-info', function() {
         assert.equal(res.headers['x-reader-user'], body.userId);
         shared.userID = body.userId; // save for later
         
+        QUnit.start();
+    });
+});
+
+QUnit.asyncTest('user-info xml', function() {
+    request(settings.api + '/user-info?output=xml', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.ok(/xml/.test(res.headers['content-type']));
+        
+        var doc = xml.parseXml(body);
+        assert.equal(doc.root().name(), 'object');
+        
+        var userId = doc.get('./string[@name="userId"]').text();
+        assert.equal(typeof userId, 'string');
+        assert.equal(doc.get('./string[@name="userName"]').text(), settings.username.split('@')[0]);
+        assert.ok(/^\d+$/.test(doc.get('./string[@name="userProfileId"]').text()));
+        assert.equal(doc.get('./string[@name="userEmail"]').text(), settings.username);
+        assert.ok(doc.get('./boolean[@name="isBloggerUser"]').text());
+        assert.ok(/^\d+$/.test(doc.get('./number[@name="signupTimeSec"]').text()));
+        assert.ok(doc.get('./boolean[@name="isMultiLoginEnabled"]').text());
+        
+        QUnit.start();
+    });
+});
+
+QUnit.asyncTest('user-info invalid format', function() {
+    request(settings.api + '/user-info?output=invalid', function(err, res, body) {
+        assert.equal(res.statusCode, 400);
         QUnit.start();
     });
 });
