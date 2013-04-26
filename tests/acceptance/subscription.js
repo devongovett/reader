@@ -443,3 +443,106 @@ QUnit.asyncTest('subscribed unknown', function() {
         QUnit.start();
     });
 });
+
+QUnit.asyncTest('subscription OPML export', function() {
+    var OPMLParser = require('opmlparser');
+    
+    request(settings.server + '/reader/subscriptions/export')
+        .on('response', function(res) {
+            assert.equal(res.statusCode, 200);
+            assert.equal(res.headers['content-type'], 'text/xml; charset=UTF-8');
+            
+            // doesn't exactly match Google Reader. they have no quotes or space after ;, but I think this should still work
+            assert.ok(/^attachment;\s*filename="?google-reader-subscriptions.xml"?$/.test(res.headers['content-disposition']));
+        })
+        .pipe(new OPMLParser({ addmeta: false }))
+        .on('error', function(err) {
+            assert.ok(false, 'OPML parse error');
+        })
+        .on('meta', function(meta) {
+            assert.equal(typeof meta.title, 'string');
+            assert.equal(meta['#version'], '1.0');
+        })
+        .on('outline', function(outline) {
+            // sort the feeds and folders so we can compare them reliably
+            outline.sort(function(a, b) {
+                return a.title < b.title ? -1 : 1;
+            }).forEach(function(n) {
+                if (n.outline) {
+                    n.outline.sort(function(a, b) {
+                        return a.title < b.title ? -1 : 1;
+                    });
+                }
+            });
+            
+            assert.deepEqual(outline, [{
+                title: 'Apple Hot News',
+                text: 'Apple Hot News',
+                type: 'rss',
+                xmlurl: 'https://www.apple.com/main/rss/hotnews/hotnews.rss',
+                htmlurl: 'http://www.apple.com/hotnews/',
+                folder: ''
+            }, {
+                text: 'BBC News - Home',
+                title: 'BBC News - Home',
+                type: 'rss',
+                xmlurl: 'http://feeds.bbci.co.uk/news/rss.xml',
+                htmlurl: 'http://www.bbc.co.uk/news/#sa-ns_mchannel=rss&ns_source=PublicRSS20-sa',
+                folder: ''
+            }, {
+                title: 'OPML Folder',
+                text: 'OPML Folder',
+                outline: [{
+                    text: 'Hulu Custom Title',
+                    title: 'Hulu Custom Title',
+                    type: 'rss',
+                    xmlurl: 'http://rss.hulu.com/HuluPopularVideosThisMonth',
+                    htmlurl: 'http://www.hulu.com/feed',
+                    folder: 'OPML Folder'
+                }, {
+                    text: 'Uploads by MontyPython',
+                    title: 'Uploads by MontyPython',
+                    type: 'rss',
+                    xmlurl: 'http://gdata.youtube.com/feeds/base/users/MontyPython/uploads?alt=rss&amp;v=2&amp;client=ytapi-youtube-profile',
+                    htmlurl: 'http://www.youtube.com/channel/UCGm3CO6LPcN-Y7HIuyE0Rew/videos',
+                    folder: 'OPML Folder'
+                }]
+            }, {
+                title: 'bar',
+                text: 'bar',
+                outline: [{
+                    text: 'Edited title',
+                    title: 'Edited title',
+                    type: 'rss',
+                    xmlurl: 'http://daringfireball.net/index.xml',
+                    htmlurl: 'http://daringfireball.net/',
+                    folder: 'bar'
+                }]
+            }, {
+                title: 'foo',
+                text: 'foo',
+                outline: [{
+                    text: 'NYT > Global Home',
+                    title: 'NYT > Global Home',
+                    type: 'rss',
+                    xmlurl: 'http://rss.nytimes.com/services/xml/rss/nyt/GlobalHome.xml',
+                    htmlurl: 'http://www.nytimes.com/pages/global/index.html?partner=rss&emc=rss',
+                    folder: 'foo'
+                }]
+            }, {
+                title: 'test',
+                text: 'test',
+                outline: [{
+                    text: 'NYT > Global Home',
+                    title: 'NYT > Global Home',
+                    type: 'rss',
+                    xmlurl: 'http://rss.nytimes.com/services/xml/rss/nyt/GlobalHome.xml',
+                    htmlurl: 'http://www.nytimes.com/pages/global/index.html?partner=rss&emc=rss',
+                    folder: 'test'
+                }]
+            }]);
+        })
+        .on('end', function() {
+            QUnit.start();
+        });
+});
