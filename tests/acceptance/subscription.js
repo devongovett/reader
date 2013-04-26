@@ -233,6 +233,15 @@ QUnit.asyncTest('quickadd invalid', function() {
     });
 });
 
+// apparently xml is the default output format for this one... not consistent
+// should we test for this?
+QUnit.asyncTest('subscription list default output type', function() {
+    request(settings.api + '/subscription/list', function(err, res, body) {
+        assert.ok(/xml/.test(res.headers['content-type']));
+        QUnit.start();
+    });
+});
+
 QUnit.asyncTest('subscription list', function() {
     request(settings.api + '/subscription/list?output=json', function(err, res, body) {
         assert.equal(res.statusCode, 200);
