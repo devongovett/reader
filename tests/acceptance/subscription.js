@@ -65,7 +65,7 @@ QUnit.asyncTest('subscribe invalid tag', function() {
 });
 
 QUnit.asyncTest('subscribe invalid tags', function() {
-     // send a valid tag, and an invalid one
+    // send a valid tag, and an invalid one
     var req = request.post(settings.api + '/subscription/edit', function(err, res, body) {
         assert.equal(res.statusCode, 400);
         QUnit.start();
@@ -206,19 +206,28 @@ QUnit.asyncTest('unsubscribe unknown', function() {
 });
 
 QUnit.asyncTest('quickadd', function() {
+    var feed = 'https://www.apple.com/main/rss/hotnews/hotnews.rss';
     request.post(settings.api + '/subscription/quickadd', function(err, res, body) {
         assert.equal(res.statusCode, 200);
-        // Google Reader doesn't send OK back...
+        // assert.ok(/json/.test(res.headers['content-type'])); // Google Reader returns HTML? whaaa
+        // Google Reader sends back search results maybe?
+        body = JSON.parse(body);
+        assert.equal(body.query, feed);
+        assert.equal(body.numResults, 1);
+        assert.equal(body.streamId, 'feed/' + feed);
         QUnit.start();
     }).form({
-        quickadd: 'https://www.apple.com/main/rss/hotnews/hotnews.rss',
+        quickadd: feed,
         T: shared.token
     });
 });
 
 QUnit.asyncTest('quickadd invalid', function() {
     request.post(settings.api + '/subscription/quickadd', function(err, res, body) {
-        assert.equal(res.statusCode, 200); // WTF? Google Reader sends 200 response on invalid feed
+        assert.equal(res.statusCode, 200); // Google Reader sends 200 response on invalid feed
+        body = JSON.parse(body);
+        assert.equal(body.query, 'invalid');
+        assert.equal(typeof body.numResults, 'number');
         QUnit.start();
     }).form({ 
         quickadd: 'invalid',
