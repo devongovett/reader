@@ -1,8 +1,7 @@
 var QUnit = require('qunit-cli'),
     assert = QUnit.assert,
     fs = require('fs'),
-    shared = require('../shared'),
-    settings = require('./settings'),
+    shared = require('./shared'),
     request = shared.request;
     
 QUnit.module('Subscription');
@@ -12,49 +11,49 @@ var FEED2 = 'feed/http://daringfireball.net/index.xml';
 var FEED3 = 'feed/http://rss.cnn.com/rss/edition.rss';
 
 QUnit.asyncTest('subscribe unauthenticated', function() {
-    request.post(settings.api + '/subscription/edit', { headers: {}}, function(err, res, body) {
+    request.post(shared.api + '/subscription/edit', { headers: {}}, function(err, res, body) {
         assert.equal(res.statusCode, 401);
         QUnit.start();
     }).form({ s: FEED1, ac: 'subscribe' });
 });
 
 QUnit.asyncTest('subscribe missing token', function() {
-    request.post(settings.api + '/subscription/edit', function(err, res, body) {
+    request.post(shared.api + '/subscription/edit', function(err, res, body) {
         assert.equal(res.statusCode, 400);
         QUnit.start();
     }).form({ s: FEED1, ac: 'subscribe' });
 });
 
 QUnit.asyncTest('subscribe invalid token', function() {
-    request.post(settings.api + '/subscription/edit', function(err, res, body) {
+    request.post(shared.api + '/subscription/edit', function(err, res, body) {
         assert.equal(res.statusCode, 400);
         QUnit.start();
     }).form({ s: FEED1, ac: 'subscribe', T: 'invalid' });
 });
 
 QUnit.asyncTest('subscribe missing stream', function() {
-    request.post(settings.api + '/subscription/edit', function(err, res, body) {
+    request.post(shared.api + '/subscription/edit', function(err, res, body) {
         assert.equal(res.statusCode, 400);
         QUnit.start();
     }).form({ ac: 'subscribe', T: shared.token });
 });
 
 QUnit.asyncTest('subscribe invalid stream', function() {
-    request.post(settings.api + '/subscription/edit', function(err, res, body) {
+    request.post(shared.api + '/subscription/edit', function(err, res, body) {
         assert.equal(res.statusCode, 400);
         QUnit.start();
     }).form({ s: FEED1.slice(5), ac: 'subscribe', T: shared.token });
 });
 
 QUnit.asyncTest('subscribe invalid url', function() {
-    request.post(settings.api + '/subscription/edit', function(err, res, body) {
+    request.post(shared.api + '/subscription/edit', function(err, res, body) {
         assert.equal(res.statusCode, 400);
         QUnit.start();
     }).form({ s: 'feed/invalid', ac: 'subscribe', T: shared.token });
 });
 
 QUnit.asyncTest('subscribe invalid tag', function() {
-    request.post(settings.api + '/subscription/edit', function(err, res, body) {
+    request.post(shared.api + '/subscription/edit', function(err, res, body) {
         assert.equal(res.statusCode, 400);
         QUnit.start();
     }).form({ 
@@ -67,7 +66,7 @@ QUnit.asyncTest('subscribe invalid tag', function() {
 
 QUnit.asyncTest('subscribe invalid tags', function() {
     // send a valid tag, and an invalid one
-    var req = request.post(settings.api + '/subscription/edit', function(err, res, body) {
+    var req = request.post(shared.api + '/subscription/edit', function(err, res, body) {
         assert.equal(res.statusCode, 400);
         QUnit.start();
     }).form({ 
@@ -83,7 +82,7 @@ QUnit.asyncTest('subscribe invalid tags', function() {
 });
 
 QUnit.asyncTest('invalid action', function() {
-    request.post(settings.api + '/subscription/edit', function(err, res, body) {
+    request.post(shared.api + '/subscription/edit', function(err, res, body) {
         assert.equal(res.statusCode, 400);
         QUnit.start();
     }).form({ 
@@ -95,7 +94,7 @@ QUnit.asyncTest('invalid action', function() {
 });
 
 QUnit.asyncTest('subscribe', function() {
-    request.post(settings.api + '/subscription/edit', function(err, res, body) {
+    request.post(shared.api + '/subscription/edit', function(err, res, body) {
         assert.equal(res.statusCode, 200);
         assert.equal(body, 'OK');
         QUnit.start();
@@ -107,7 +106,7 @@ QUnit.asyncTest('subscribe', function() {
 });
 
 QUnit.asyncTest('subscribe multiple', function() {
-    var req = request.post(settings.api + '/subscription/edit', function(err, res, body) {
+    var req = request.post(shared.api + '/subscription/edit', function(err, res, body) {
         assert.equal(res.statusCode, 200);
         assert.equal(body, 'OK');
         QUnit.start();
@@ -122,7 +121,7 @@ QUnit.asyncTest('subscribe multiple', function() {
 });
 
 QUnit.asyncTest('add tags', function() {
-    var req = request.post(settings.api + '/subscription/edit', function(err, res, body) {
+    var req = request.post(shared.api + '/subscription/edit', function(err, res, body) {
         assert.equal(res.statusCode, 200);
         assert.equal(body, 'OK');
         QUnit.start();
@@ -139,7 +138,7 @@ QUnit.asyncTest('add tags', function() {
 });
 
 QUnit.asyncTest('remove tags', function() {
-    var req = request.post(settings.api + '/subscription/edit', function(err, res, body) {
+    var req = request.post(shared.api + '/subscription/edit', function(err, res, body) {
         assert.equal(res.statusCode, 200);
         assert.equal(body, 'OK');
         QUnit.start();
@@ -154,7 +153,7 @@ QUnit.asyncTest('remove tags', function() {
 });
 
 QUnit.asyncTest('edit title', function() {
-    request.post(settings.api + '/subscription/edit', function(err, res, body) {
+    request.post(shared.api + '/subscription/edit', function(err, res, body) {
         assert.equal(res.statusCode, 200);
         assert.equal(body, 'OK');
         QUnit.start();
@@ -167,7 +166,7 @@ QUnit.asyncTest('edit title', function() {
 });
 
 QUnit.asyncTest('edit multiple', function() {
-    var req = request.post(settings.api + '/subscription/edit', function(err, res, body) {
+    var req = request.post(shared.api + '/subscription/edit', function(err, res, body) {
         assert.equal(res.statusCode, 200);
         assert.equal(body, 'OK');
         QUnit.start();
@@ -182,7 +181,7 @@ QUnit.asyncTest('edit multiple', function() {
 });
 
 QUnit.asyncTest('unsubscribe', function() {
-    request.post(settings.api + '/subscription/edit', function(err, res, body) {
+    request.post(shared.api + '/subscription/edit', function(err, res, body) {
         assert.equal(res.statusCode, 200);
         assert.equal(body, 'OK');
         QUnit.start();
@@ -195,7 +194,7 @@ QUnit.asyncTest('unsubscribe', function() {
 
 
 QUnit.asyncTest('unsubscribe unknown', function() {
-    request.post(settings.api + '/subscription/edit', function(err, res, body) {
+    request.post(shared.api + '/subscription/edit', function(err, res, body) {
         assert.equal(res.statusCode, 200);
         assert.equal(body, 'OK');
         QUnit.start();
@@ -208,7 +207,7 @@ QUnit.asyncTest('unsubscribe unknown', function() {
 
 QUnit.asyncTest('quickadd', function() {
     var feed = 'https://www.apple.com/main/rss/hotnews/hotnews.rss';
-    request.post(settings.api + '/subscription/quickadd', function(err, res, body) {
+    request.post(shared.api + '/subscription/quickadd', function(err, res, body) {
         assert.equal(res.statusCode, 200);
         // assert.ok(/json/.test(res.headers['content-type'])); // Google Reader returns HTML? whaaa
         // Google Reader sends back search results maybe?
@@ -224,7 +223,7 @@ QUnit.asyncTest('quickadd', function() {
 });
 
 QUnit.asyncTest('quickadd invalid', function() {
-    request.post(settings.api + '/subscription/quickadd', function(err, res, body) {
+    request.post(shared.api + '/subscription/quickadd', function(err, res, body) {
         assert.equal(res.statusCode, 200); // Google Reader sends 200 response on invalid feed
         body = JSON.parse(body);
         assert.equal(body.query, 'invalid');
@@ -237,7 +236,7 @@ QUnit.asyncTest('quickadd invalid', function() {
 });
 
 QUnit.asyncTest('subscription OPML import missing token', function() {
-    var form = request.post(settings.server + '/reader/subscriptions/import', function(err, res, body) {
+    var form = request.post(shared.server + '/reader/subscriptions/import', function(err, res, body) {
         assert.equal(res.statusCode, 400);
         QUnit.start();
     }).form();
@@ -251,7 +250,7 @@ QUnit.asyncTest('subscription OPML import missing token', function() {
 });
 
 QUnit.asyncTest('subscription OPML import invalid token', function() {
-    var form = request.post(settings.server + '/reader/subscriptions/import', function(err, res, body) {
+    var form = request.post(shared.server + '/reader/subscriptions/import', function(err, res, body) {
         assert.equal(res.statusCode, 400);
         QUnit.start();
     }).form();
@@ -266,7 +265,7 @@ QUnit.asyncTest('subscription OPML import invalid token', function() {
 });
 
 QUnit.asyncTest('subscription OPML import invalid action', function() {
-    var form = request.post(settings.server + '/reader/subscriptions/import', function(err, res, body) {
+    var form = request.post(shared.server + '/reader/subscriptions/import', function(err, res, body) {
         assert.equal(res.statusCode, 400);
         QUnit.start();
     }).form();
@@ -281,7 +280,7 @@ QUnit.asyncTest('subscription OPML import invalid action', function() {
 });
 
 QUnit.asyncTest('subscription OPML import missing file', function() {
-    var form = request.post(settings.server + '/reader/subscriptions/import', function(err, res, body) {
+    var form = request.post(shared.server + '/reader/subscriptions/import', function(err, res, body) {
         assert.equal(res.statusCode, 400);
         QUnit.start();
     }).form();
@@ -291,7 +290,7 @@ QUnit.asyncTest('subscription OPML import missing file', function() {
 });
 
 QUnit.asyncTest('subscription OPML import invalid file', function() {
-    var form = request.post(settings.server + '/reader/subscriptions/import', function(err, res, body) {
+    var form = request.post(shared.server + '/reader/subscriptions/import', function(err, res, body) {
         assert.equal(res.statusCode, 200);
         QUnit.start();
     }).form();
@@ -306,7 +305,7 @@ QUnit.asyncTest('subscription OPML import invalid file', function() {
 });
 
 QUnit.asyncTest('subscription OPML import empty', function() {
-    var form = request.post(settings.server + '/reader/subscriptions/import', function(err, res, body) {
+    var form = request.post(shared.server + '/reader/subscriptions/import', function(err, res, body) {
         assert.equal(res.statusCode, 200);
         // assert.equal(body, 'OK'); // Google Reader responds with some JavaScript HTML page or something
         QUnit.start();
@@ -323,7 +322,7 @@ QUnit.asyncTest('subscription OPML import empty', function() {
 
 QUnit.asyncTest('subscription OPML import', function() {
     // subscribes to one new feed and one existing feed, in the "OPML Folder" tag, and sets their titles
-    var form = request.post(settings.server + '/reader/subscriptions/import', function(err, res, body) {
+    var form = request.post(shared.server + '/reader/subscriptions/import', function(err, res, body) {
         assert.equal(res.statusCode, 200);
         // assert.equal(body, 'OK');
         QUnit.start();
@@ -341,14 +340,14 @@ QUnit.asyncTest('subscription OPML import', function() {
 // apparently xml is the default output format for this one... not consistent
 // should we test for this?
 QUnit.asyncTest('subscription list default output type', function() {
-    request(settings.api + '/subscription/list', function(err, res, body) {
+    request(shared.api + '/subscription/list', function(err, res, body) {
         assert.ok(/xml/.test(res.headers['content-type']));
         QUnit.start();
     });
 });
 
 QUnit.asyncTest('subscription list', function() {
-    request(settings.api + '/subscription/list?output=json', function(err, res, body) {
+    request(shared.api + '/subscription/list?output=json', function(err, res, body) {
         assert.equal(res.statusCode, 200);
         // assert.ok(/json/.test(res.headers['content-type']));
         
@@ -422,7 +421,7 @@ QUnit.asyncTest('subscription list', function() {
 });
 
 QUnit.asyncTest('subscribed', function() {
-    request(settings.api + '/subscribed?s=' + FEED1, function(err, res, body) {
+    request(shared.api + '/subscribed?s=' + FEED1, function(err, res, body) {
         assert.equal(res.statusCode, 200);
         assert.equal(body, 'true');
         QUnit.start();
@@ -430,14 +429,14 @@ QUnit.asyncTest('subscribed', function() {
 });
 
 QUnit.asyncTest('subscribed invalid', function() {
-    request(settings.api + '/subscribed?s=feed/invalid', function(err, res, body) {
+    request(shared.api + '/subscribed?s=feed/invalid', function(err, res, body) {
         assert.equal(res.statusCode, 400);
         QUnit.start();
     });
 });
 
 QUnit.asyncTest('subscribed unknown', function() {
-    request(settings.api + '/subscribed?s=feed/http://unknown.com/', function(err, res, body) {
+    request(shared.api + '/subscribed?s=feed/http://unknown.com/', function(err, res, body) {
         assert.equal(res.statusCode, 200);
         assert.equal(body, 'false');
         QUnit.start();
@@ -447,7 +446,7 @@ QUnit.asyncTest('subscribed unknown', function() {
 QUnit.asyncTest('subscription OPML export', function() {
     var OPMLParser = require('opmlparser');
     
-    request(settings.server + '/reader/subscriptions/export')
+    request(shared.server + '/reader/subscriptions/export')
         .on('response', function(res) {
             assert.equal(res.statusCode, 200);
             assert.equal(res.headers['content-type'], 'text/xml; charset=UTF-8');
