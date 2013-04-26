@@ -1,5 +1,6 @@
 var QUnit = require('qunit-cli'),
     assert = QUnit.assert,
+    fs = require('fs'),
     shared = require('../shared'),
     settings = require('./settings'),
     request = shared.request;
@@ -235,6 +236,108 @@ QUnit.asyncTest('quickadd invalid', function() {
     });
 });
 
+QUnit.asyncTest('subscription OPML import missing token', function() {
+    var form = request.post(settings.server + '/reader/subscriptions/import', function(err, res, body) {
+        assert.equal(res.statusCode, 400);
+        QUnit.start();
+    }).form();
+    
+    form.append('action', 'opml-upload');
+    form.append('opml-file', '', {
+        header: '--' + form.getBoundary() + '\r\n' +
+                'Content-Disposition: form-data; name="opml-file"; filename="file.xml"\r\n' +
+                'Content-Type: text/xml\r\n\r\n'
+    });
+});
+
+QUnit.asyncTest('subscription OPML import invalid token', function() {
+    var form = request.post(settings.server + '/reader/subscriptions/import', function(err, res, body) {
+        assert.equal(res.statusCode, 400);
+        QUnit.start();
+    }).form();
+    
+    form.append('T', 'invalid');
+    form.append('action', 'opml-upload');
+    form.append('opml-file', '', {
+        header: '--' + form.getBoundary() + '\r\n' +
+                'Content-Disposition: form-data; name="opml-file"; filename="file.xml"\r\n' +
+                'Content-Type: text/xml\r\n\r\n'
+    });
+});
+
+QUnit.asyncTest('subscription OPML import invalid action', function() {
+    var form = request.post(settings.server + '/reader/subscriptions/import', function(err, res, body) {
+        assert.equal(res.statusCode, 400);
+        QUnit.start();
+    }).form();
+    
+    form.append('T', shared.token);
+    form.append('action', 'invalid');
+    form.append('opml-file', '', {
+        header: '--' + form.getBoundary() + '\r\n' +
+                'Content-Disposition: form-data; name="opml-file"; filename="file.xml"\r\n' +
+                'Content-Type: text/xml\r\n\r\n'
+    });
+});
+
+QUnit.asyncTest('subscription OPML import missing file', function() {
+    var form = request.post(settings.server + '/reader/subscriptions/import', function(err, res, body) {
+        assert.equal(res.statusCode, 400);
+        QUnit.start();
+    }).form();
+    
+    form.append('T', shared.token);
+    form.append('action', 'opml-upload');
+});
+
+QUnit.asyncTest('subscription OPML import invalid file', function() {
+    var form = request.post(settings.server + '/reader/subscriptions/import', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        QUnit.start();
+    }).form();
+    
+    form.append('T', shared.token);
+    form.append('action', 'opml-upload');
+    form.append('opml-file', 'invalid', {
+        header: '--' + form.getBoundary() + '\r\n' +
+                'Content-Disposition: form-data; name="opml-file"; filename="file.xml"\r\n' +
+                'Content-Type: text/xml\r\n\r\n'
+    });
+});
+
+QUnit.asyncTest('subscription OPML import empty', function() {
+    var form = request.post(settings.server + '/reader/subscriptions/import', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        // assert.equal(body, 'OK'); // Google Reader responds with some JavaScript HTML page or something
+        QUnit.start();
+    }).form();
+    
+    form.append('T', shared.token);
+    form.append('action', 'opml-upload');
+    form.append('opml-file', '<opml version="1.0"></opml>', {
+        header: '--' + form.getBoundary() + '\r\n' +
+                'Content-Disposition: form-data; name="opml-file"; filename="file.xml"\r\n' +
+                'Content-Type: text/xml\r\n\r\n'
+    });
+});
+
+QUnit.asyncTest('subscription OPML import', function() {
+    // subscribes to one new feed and one existing feed, in the "OPML Folder" tag, and sets their titles
+    var form = request.post(settings.server + '/reader/subscriptions/import', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        // assert.equal(body, 'OK');
+        QUnit.start();
+    }).form();
+    
+    form.append('T', shared.token);
+    form.append('action', 'opml-upload');
+    form.append('opml-file', fs.createReadStream(__dirname + '/../test_data/real.opml'), {
+        header: '--' + form.getBoundary() + '\r\n' +
+                'Content-Disposition: form-data; name="opml-file"; filename="test.opml"\r\n' +
+                'Content-Type: text/xml\r\n\r\n'
+    });
+});
+
 // apparently xml is the default output format for this one... not consistent
 // should we test for this?
 QUnit.asyncTest('subscription list default output type', function() {
@@ -278,6 +381,25 @@ QUnit.asyncTest('subscription list', function() {
                 htmlUrl: 'http://daringfireball.net/',
                 categories: [
                     { id: 'user/' + shared.userID + '/label/bar', label: 'bar' }
+                ]
+            }, {
+                id: 'feed/http://feeds.bbci.co.uk/news/rss.xml',
+                title: 'BBC News - Home',
+                htmlUrl: 'http://www.bbc.co.uk/news/#sa-ns_mchannel=rss&ns_source=PublicRSS20-sa',
+                categories: []
+            }, {
+                id: 'feed/http://gdata.youtube.com/feeds/base/users/MontyPython/uploads?alt=rss&amp;v=2&amp;client=ytapi-youtube-profile',
+                title: 'Uploads by MontyPython',
+                htmlUrl: 'http://www.youtube.com/channel/UCGm3CO6LPcN-Y7HIuyE0Rew/videos',
+                categories: [
+                    { id: 'user/' + shared.userID + '/label/OPML Folder', label: 'OPML Folder' }
+                ]
+            }, {
+                id: 'feed/http://rss.hulu.com/HuluPopularVideosThisMonth',
+                title: 'Hulu Custom Title',
+                htmlUrl: 'http://www.hulu.com/feed',
+                categories: [
+                    { id: 'user/' + shared.userID + '/label/OPML Folder', label: 'OPML Folder' }
                 ]
             }, {
                 id: 'feed/http://rss.nytimes.com/services/xml/rss/nyt/GlobalHome.xml',

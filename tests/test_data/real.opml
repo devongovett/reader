@@ -1,0 +1,12 @@
+<opml version="1.1">
+<head>
+    <title>Test Subscriptions</title>
+</head>
+<body>
+    <outline text="OPML Folder">
+        <outline text="Hulu Custom Title" title="Hulu Custom Title" type="rss" xmlUrl="http://rss.hulu.com/HuluPopularVideosThisMonth"/>
+        <outline type="rss" xmlUrl="http://gdata.youtube.com/feeds/base/users/MontyPython/uploads?alt=rss&amp;amp;v=2&amp;amp;client=ytapi-youtube-profile"/>
+    </outline>
+    <outline type="rss" xmlUrl="http://feeds.bbci.co.uk/news/rss.xml"/>
+</body>
+</opml>
