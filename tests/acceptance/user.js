@@ -50,7 +50,6 @@ QUnit.asyncTest('valid ClientLogin', function() {
         assert.ok(/LSID=.+\n/.test(body));
         assert.ok(/Auth=.+\n/.test(body));
         
-        console.log(body)
         shared.setAuth(body.match(/Auth=(.+)/)[1]);
         QUnit.start();
     }).form({ Email: shared.username, Passwd: shared.password, service: 'reader' });
