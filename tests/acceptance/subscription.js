@@ -9,6 +9,7 @@ QUnit.module('Subscription');
 var FEED1 = 'feed/http://rss.nytimes.com/services/xml/rss/nyt/GlobalHome.xml';
 var FEED2 = 'feed/http://daringfireball.net/index.xml';
 var FEED3 = 'feed/http://rss.cnn.com/rss/edition.rss';
+var FEED4 = 'https://www.apple.com/main/rss/hotnews/hotnews.rss';
 
 QUnit.asyncTest('subscribe unauthenticated', function() {
     request.post(shared.api + '/subscription/edit', { headers: {}}, function(err, res, body) {
@@ -206,18 +207,17 @@ QUnit.asyncTest('unsubscribe unknown', function() {
 });
 
 QUnit.asyncTest('quickadd', function() {
-    var feed = 'https://www.apple.com/main/rss/hotnews/hotnews.rss';
     request.post(shared.api + '/subscription/quickadd', function(err, res, body) {
         assert.equal(res.statusCode, 200);
         // assert.ok(/json/.test(res.headers['content-type'])); // Google Reader returns HTML? whaaa
         // Google Reader sends back search results maybe?
         body = JSON.parse(body);
-        assert.equal(body.query, feed);
+        assert.equal(body.query, FEED4);
         assert.equal(body.numResults, 1);
-        assert.equal(body.streamId, 'feed/' + feed);
+        assert.equal(body.streamId, 'feed/' + FEED4);
         QUnit.start();
     }).form({
-        quickadd: feed,
+        quickadd: FEED4,
         T: shared.token
     });
 });
