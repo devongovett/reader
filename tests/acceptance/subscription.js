@@ -450,8 +450,6 @@ QUnit.asyncTest('subscription OPML export', function() {
         .on('response', function(res) {
             assert.equal(res.statusCode, 200);
             assert.equal(res.headers['content-type'], 'text/xml; charset=UTF-8');
-            
-            // doesn't exactly match Google Reader. they have no quotes or space after ;, but I think this should still work
             assert.ok(/^attachment;\s*filename="?google-reader-subscriptions.xml"?$/.test(res.headers['content-disposition']));
         })
         .pipe(new OPMLParser({ addmeta: false }))
