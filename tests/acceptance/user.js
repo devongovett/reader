@@ -87,6 +87,7 @@ QUnit.asyncTest('user-info', function() {
 
         body = JSON.parse(body);
         assert.equal(typeof body.userId, 'string');
+        assert.equal(typeof body.userName, 'string');
         assert.equal(typeof body.userProfileId, 'string');
         assert.equal(body.userEmail, shared.username);
         assert.equal(typeof body.signupTimeSec, 'number');
@@ -107,6 +108,7 @@ QUnit.asyncTest('user-info xml', function() {
 
         var userId = doc.get('./string[@name="userId"]').text();
         assert.equal(typeof userId, 'string');
+        assert.equal(typeof doc.get('./string[@name="userName"]').text(), 'string');
         assert.ok(/^\d+$/.test(doc.get('./string[@name="userProfileId"]').text()));
         assert.equal(doc.get('./string[@name="userEmail"]').text(), shared.username);
         assert.ok(doc.get('./boolean[@name="isBloggerUser"]').text());
