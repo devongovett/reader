@@ -227,21 +227,31 @@ QUnit.asyncTest('quickadd', function() {
     
     request.post(shared.api + '/subscription/quickadd', function(err, res, body) {
         assert.equal(res.statusCode, 200);
-        assert.equal(body, 'OK');
+        assert.ok(/json/.test(res.headers['content-type']));
+
+        body = JSON.parse(body);
+        assert.equal(body.query, 'http://example.com/feed3.xml');
+        assert.equal(body.numResults, 1);
+        assert.equal(body.streamId, 'feed/http://example.com/feed3.xml');
+        
         QUnit.start();
     }).form({ 
-        quickadd: 'feed/http://example.com/feed3.xml',
+        quickadd: 'http://example.com/feed3.xml',
         T: shared.token
     });
 });
 
 QUnit.asyncTest('quickadd invalid', function() {
     request.post(shared.api + '/subscription/quickadd', function(err, res, body) {
-        assert.equal(res.statusCode, 400);
-        assert.equal(body, 'Error=InvalidStream');
+        assert.equal(res.statusCode, 200); // Google Reader sends 200 response on invalid feed
+        assert.ok(/json/.test(res.headers['content-type']));
+        
+        body = JSON.parse(body);
+        assert.equal(body.query, 'invalid');
+        assert.equal(typeof body.numResults, 'number');
         QUnit.start();
     }).form({ 
-        quickadd: 'feed/invalid',
+        quickadd: 'invalid',
         T: shared.token
     });
 });

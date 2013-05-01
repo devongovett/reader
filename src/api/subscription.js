@@ -133,12 +133,19 @@ app.post('/reader/api/0/subscription/quickadd', function(req, res) {
     if (!utils.checkAuth(req, res, true))
         return;
         
-    var streams = utils.parseFeeds(req.body.quickadd);
-    if (!streams)
-        return res.send(400, 'Error=InvalidStream');
+    if (!utils.isUrl(req.body.quickadd)) {
+        return res.json({
+            query: req.body.quickadd,
+            numResults: 0
+        });
+    }
         
-    actions.subscribe(req, streams[0]).then(function() {
-        res.send('OK');
+    actions.subscribe(req, req.body.quickadd).then(function() {
+        res.json({
+            query: req.body.quickadd,
+            numResults: 1,
+            streamId: 'feed/' + req.body.quickadd
+        });
     }, function(err) {
         res.send(500, 'Error=Unknown');
     });
