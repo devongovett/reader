@@ -177,7 +177,7 @@ app.get('/reader/api/0/subscription/list', function(req, res) {
         
         utils.respond(res, {
             subscriptions: subscriptions
-        });
+        }, 'xml');
     }, function(err) {
         res.send(500, 'Error=Unknown');
     });

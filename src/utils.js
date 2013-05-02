@@ -10,8 +10,8 @@ exports.ref = function(type) {
     };
 };
 
-exports.respond = function(res, response) {
-    var format = res.req.query.output || 'json';
+exports.respond = function(res, response, defaultFormat) {
+    var format = res.req.query.output || defaultFormat || 'json';
     
     switch (format) {
         case 'json':

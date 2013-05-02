@@ -106,7 +106,7 @@ QUnit.asyncTest('unsubscribe', function() {
 });
 
 QUnit.asyncTest('subscription list', function() {
-    request(shared.api + '/subscription/list', function(err, res, body) {
+    request(shared.api + '/subscription/list?output=json', function(err, res, body) {
         assert.equal(res.statusCode, 200);
         assert.ok(/json/.test(res.headers['content-type']));
         
