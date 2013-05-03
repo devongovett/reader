@@ -63,7 +63,7 @@ QUnit.asyncTest('empty registration password', function() {
 QUnit.asyncTest('ClientLogin invalid username', function() {
     request.post(shared.server + '/accounts/ClientLogin', function(err, res, body) {
         assert.equal(res.statusCode, 403);
-        assert.equal(body, 'Error=BadAuthentication');
+        assert.equal(body, 'Error=BadAuthentication\n');
         
         QUnit.start();
     }).form({ Email: 'invalid@example.com', Passwd: 'password' });
@@ -72,7 +72,7 @@ QUnit.asyncTest('ClientLogin invalid username', function() {
 QUnit.asyncTest('ClientLogin invalid password', function() {
     request.post(shared.server + '/accounts/ClientLogin', function(err, res, body) {
         assert.equal(res.statusCode, 403);
-        assert.equal(body, 'Error=BadAuthentication');
+        assert.equal(body, 'Error=BadAuthentication\n');
         
         QUnit.start();
     }).form({ Email: 'test@example.com', Passwd: 'invalid' });
@@ -81,7 +81,7 @@ QUnit.asyncTest('ClientLogin invalid password', function() {
 QUnit.asyncTest('ClientLogin missing password', function() {
     request.post(shared.server + '/accounts/ClientLogin', function(err, res, body) {
         assert.equal(res.statusCode, 403);
-        assert.equal(body, 'Error=BadAuthentication');
+        assert.equal(body, 'Error=BadAuthentication\n');
         
         QUnit.start();
     }).form({ Email: 'test@example.com' });
@@ -90,7 +90,7 @@ QUnit.asyncTest('ClientLogin missing password', function() {
 QUnit.asyncTest('ClientLogin missing email', function() {
     request.post(shared.server + '/accounts/ClientLogin', function(err, res, body) {
         assert.equal(res.statusCode, 403);
-        assert.equal(body, 'Error=BadAuthentication');
+        assert.equal(body, 'Error=BadAuthentication\n');
         
         QUnit.start();
     }).form({ Passwd: 'hi' });

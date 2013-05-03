@@ -9,15 +9,15 @@ var app = module.exports = express();
 // and http://code.google.com/p/google-reader-api/wiki/Authentication
 app.post('/accounts/ClientLogin', function(req, res) {
     if (!req.body.Email || !req.body.Passwd)
-        return res.send(403, 'Error=BadAuthentication'); // TODO: Google Reader puts a "\n" at the end of this. Should we match?
+        return res.send(403, 'Error=BadAuthentication\n');
     
     db.User.findOne({ username: req.body.Email }, function(err, user) {
         if (err || !user)
-            return res.send(403, 'Error=BadAuthentication');
+            return res.send(403, 'Error=BadAuthentication\n');
             
         user.checkPassword(req.body.Passwd, function(err, matched) {
             if (err || !matched)
-                return res.send(403, 'Error=BadAuthentication');
+                return res.send(403, 'Error=BadAuthentication\n');
                 
             req.session = {
                 user: user.id
