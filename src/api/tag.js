@@ -115,7 +115,7 @@ app.post('/reader/api/0/mark-all-as-read', function(req, res) {
     // Get all of the posts in the stream
     // Google Reader appears to only accept a single stream
     var tag = db.findOrCreate(db.Tag, tag);
-    var posts = db.postsForStreams(streams);
+    
     
     // Check if the timestamp parameter is set.
     // If so, add to postsForStreams options.
@@ -126,6 +126,8 @@ app.post('/reader/api/0/mark-all-as-read', function(req, res) {
         };
         console.log('Check ts: ' + req.body.ts);
     }
+    
+    var posts = db.postsForStreams(streams, options);
     
     rsvp.all([tag, posts]).then(function(results) {
         var tag = results[0], posts = results[1];
