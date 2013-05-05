@@ -124,7 +124,6 @@ app.post('/reader/api/0/mark-all-as-read', function(req, res) {
         options = {
             maxTime: req.body.ts
         };
-        console.log('Check ts: ' + req.body.ts);
     }
     
     var posts = db.postsForStreams(streams, options);
