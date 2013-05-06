@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/devongovett/reader.png?branch=master)](https://travis-ci.org/devongovett/reader)
+
 ## What is this?
 
 Google reader is shutting down.  A lot of people use it.  A lot of apps depend on its API.
