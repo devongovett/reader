@@ -265,7 +265,7 @@ QUnit.asyncTest('item ids tag exclude item tag', function() {
         body = JSON.parse(body);
         assert.equal(typeof body.continuation, 'string');
         assert.ok(Array.isArray(body.itemRefs));
-        assert.equal(body.itemRefs.length, 13);
+        assert.equal(body.itemRefs.length, 10);
         
         var lastTimestamp = Infinity;
         body.itemRefs.forEach(function(post) {

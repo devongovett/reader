@@ -118,6 +118,18 @@ QUnit.asyncTest('mark all as read subscription tag', function() {
     });
 });
 
+QUnit.asyncTest('mark all as read timestamp', function() {
+    request.post(shared.api + '/mark-all-as-read', function(err, res, body) {
+        assert.equal(res.statusCode, 200);
+        assert.equal(body, 'OK');
+        QUnit.start();
+    }).form({
+        T: shared.token,
+        s: 'feed/http://example.com/feed1.xml',
+        ts: 1362670667
+    });
+});
+
 QUnit.asyncTest('list tags unauthenticated', function() {
     request(shared.api + '/tag/list', { headers: {}}, function(err, res, body) {
         assert.equal(res.statusCode, 401);
@@ -176,7 +188,7 @@ QUnit.asyncTest('unread count', function() {
             max: 1000,
             unreadcounts: [{
                 id: 'feed/http://example.com/feed1.xml',
-                count: 5,
+                count: 2,
                 newestItemTimestampUsec: 0 // TODO
             }, {
                 id: 'feed/http://example.com/feed2.xml',
@@ -192,11 +204,11 @@ QUnit.asyncTest('unread count', function() {
                 newestItemTimestampUsec: 0
             }, {
                 id: 'user/' + shared.userID + '/label/bar',
-                count: 10,
+                count: 7,
                 newestItemTimestampUsec: 0
             }, {
                 id: 'user/' + shared.userID + '/state/com.google/reading-list',
-                count: 13,
+                count: 10,
                 newestItemTimestampUsec: 0
             }]
         });
