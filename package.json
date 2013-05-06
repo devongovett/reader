@@ -14,7 +14,7 @@
   "bugs": "http://github.com/devongovett/reader/issues",
   "dependencies": {
       "mongoose": "3.6.x",
-      "express": "3.x",
+      "express": "3.2.1",
       "bcrypt": ">=0.7.5",
       "validator": "0.4.x",
       "qunit-cli": "*",
