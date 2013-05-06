@@ -120,11 +120,8 @@ app.post('/reader/api/0/mark-all-as-read', function(req, res) {
     // Check if the timestamp parameter is set.
     // If so, add to postsForStreams options.
     var options = {};
-    if (req.body.ts) {
-        options = {
-            maxTime: req.body.ts
-        };
-    }
+    if (req.body.ts)
+        options.maxTime = req.body.ts;
     
     var posts = db.postsForStreams(streams, options);
     
