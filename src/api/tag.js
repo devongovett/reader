@@ -109,20 +109,18 @@ app.post('/reader/api/0/mark-all-as-read', function(req, res) {
     if (!streams)
         return res.send(400, 'Error=InvalidStream');
     
-    // Find or create the read state tag
-    var tag = utils.parseTags('user/-/state/com.google/read', req.user)[0];
-    
-    // Get all of the posts in the stream
-    // Google Reader appears to only accept a single stream
-    var tag = db.findOrCreate(db.Tag, tag);
-    
-    
-    // Check if the timestamp parameter is set.
+        // Check if the timestamp parameter is set.
     // If so, add to postsForStreams options.
     var options = {};
     if (req.body.ts)
         options.maxTime = req.body.ts;
-    
+        
+    // Find or create the read state tag
+    var tag = utils.parseTags('user/-/state/com.google/read', req.user)[0];
+
+    // Get all of the posts in the stream
+    // Google Reader appears to only accept a single stream
+    var tag = db.findOrCreate(db.Tag, tag);
     var posts = db.postsForStreams(streams, options);
     
     rsvp.all([tag, posts]).then(function(results) {
